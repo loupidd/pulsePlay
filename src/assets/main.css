@@ -1,35 +1,131 @@
-@import './base.css';
+/* ===== Font ===== */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* ===== Base Color Palette ===== */
+:root {
+  /* White & Black base */
+  --c-white: #ffffff;
+  --c-black: #111827; /* Charcoal main */
+
+  /* Crimson */
+  --c-crimson-100: #fee2e2;
+  --c-crimson-300: #fca5a5;
+  --c-crimson-500: #dc2626; /* Main */
+  --c-crimson-700: #991b1b;
+  --c-crimson-900: #450a0a;
+
+  /* Charcoal */
+  --c-charcoal-100: #f3f4f6;
+  --c-charcoal-300: #d1d5db;
+  --c-charcoal-500: #6b7280;
+  --c-charcoal-700: #374151;
+  --c-charcoal-900: #111827; /* Main */
+
+  /* Green Accent */
+  --c-green-100: #dcfce7;
+  --c-green-300: #86efac;
+  --c-green-500: #22c55e; /* Main */
+  --c-green-700: #15803d;
+  --c-green-900: #052e16;
+
+  /* ===== Semantic Colors (Light Mode) ===== */
+  --color-background: var(--c-white);
+  --color-background-soft: var(--c-charcoal-100);
+  --color-background-mute: var(--c-charcoal-300);
+
+  --color-border: var(--c-charcoal-300);
+  --color-border-hover: var(--c-charcoal-500);
+
+  --color-heading: var(--c-charcoal-900);
+  --color-text: var(--c-charcoal-700);
+
+  --color-accent: var(--c-crimson-500);
+  --color-accent-hover: var(--c-crimson-700);
+
+  --color-success: var(--c-green-500);
+  --color-success-hover: var(--c-green-700);
+
+  --section-gap: 160px;
+}
+
+/* ===== Dark Mode ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: var(--c-charcoal-900);
+    --color-background-soft: #1f2937; /* deeper charcoal */
+    --color-background-mute: #374151;
+
+    --color-border: var(--c-charcoal-700);
+    --color-border-hover: var(--c-charcoal-500);
+
+    --color-heading: var(--c-white);
+    --color-text: var(--c-charcoal-300);
+
+    --color-accent: var(--c-crimson-300); /* lighter crimson for contrast */
+    --color-accent-hover: var(--c-crimson-500);
+
+    --color-success: var(--c-green-300);
+    --color-success-hover: var(--c-green-500);
+  }
+}
+
+/* ===== Global Reset ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
   font-weight: normal;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+body {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  transition:
+    color 0.4s,
+    background-color 0.4s;
+
+  line-height: 1.6;
+  font-family:
+    'Outfit',
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+/* ===== Utility-Like Helpers ===== */
+.text-accent {
+  color: var(--color-accent);
+}
+.bg-accent {
+  background-color: var(--color-accent);
+  color: var(--c-white);
+}
+.bg-accent:hover {
+  background-color: var(--color-accent-hover);
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+.text-success {
+  color: var(--color-success);
+}
+.bg-success {
+  background-color: var(--color-success);
+  color: var(--c-white);
+}
+.bg-success:hover {
+  background-color: var(--color-success-hover);
 }
