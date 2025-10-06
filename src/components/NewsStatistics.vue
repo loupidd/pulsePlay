@@ -120,7 +120,7 @@
         <div
           v-for="(player, index) in topScorers"
           :key="player.id"
-          class="flex items-center gap-3 bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer"
+          class="player-card flex items-center gap-3 bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-all cursor-pointer"
           @click="handlePlayerClick(player.id)"
         >
           <!-- Rank -->
@@ -361,5 +361,16 @@ const handleBookmark = (newsId: string) => {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.player-card img {
+  transition: transform 0.3s;
+}
+.player-card:hover img {
+  transform: scale(1.05);
+}
+.player-card {
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 </style>

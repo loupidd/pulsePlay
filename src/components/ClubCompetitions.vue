@@ -50,6 +50,7 @@
       <!-- Add button -->
       <div
         class="filter-item flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all border border-color justify-center"
+        @click="showModal = true"
       >
         <div
           class="rounded-full w-7 h-7 bg-add-club relative flex justify-center items-center flex-shrink-0"
@@ -60,6 +61,14 @@
         <span class="text-sm font-medium truncate">Add Filter</span>
       </div>
     </div>
+    <!-- Filter Modal -->
+    <FilterModal
+      :isOpen="showModal"
+      :items="allItems"
+      :selectedFilters="selectedFilters"
+      @close="showModal = false"
+      @add-item="onAddItem"
+    />
   </div>
 </template>
 
@@ -81,7 +90,7 @@
 }
 
 .filter-active:hover {
-  background-color: var(--c-crimson-600);
+  background-color: var(--c-crimson-600) !important;
 }
 
 .bg-add-club {
@@ -116,10 +125,14 @@
 </style>
 
 <script lang="ts">
+import FilterModal from '../components/FilterModal.vue'
+
 export default {
   name: 'ClubCompetitions',
+  components: { FilterModal },
   data() {
     return {
+      showModal: false,
       selectedFilters: [] as number[],
       competitions: [
         {
@@ -193,6 +206,25 @@ export default {
       ],
     }
   },
+  computed: {
+    allItems(): { id: number; name: string; image: string; type: string }[] {
+      const competitions = this.competitions.map((comp) => ({
+        id: comp.id,
+        name: comp.name,
+        image: comp.image,
+        type: 'competition',
+      }))
+      const clubs = this.competitions.flatMap((comp) =>
+        comp.clubs.map((club) => ({
+          id: club.id,
+          name: club.name,
+          image: club.image,
+          type: 'club',
+        })),
+      )
+      return [...competitions, ...clubs]
+    },
+  },
   methods: {
     toggleFilter(id: number): void {
       const index = this.selectedFilters.indexOf(id)
@@ -206,6 +238,9 @@ export default {
     },
     isSelected(id: number): boolean {
       return this.selectedFilters.includes(id)
+    },
+    onAddItem(item: { id: number }): void {
+      this.toggleFilter(item.id)
     },
   },
 }

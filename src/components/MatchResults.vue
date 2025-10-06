@@ -51,7 +51,7 @@
           <div
             v-for="game in match.games"
             :key="game.id"
-            class="flex items-center rounded-xl py-3.5 px-4 hover:bg-white/15 transition-all cursor-pointer"
+            class="main-card flex items-center rounded-xl py-3.5 px-4 hover:bg-white/15 transition-all cursor-pointer"
             @click="handleMatchClick(game.id)"
           >
             <!-- Home Team -->
@@ -262,5 +262,6 @@ const handleFavorite = (matchId: string) => {
 <style>
 .main-card {
   margin-bottom: 12px;
+  margin-top: 12px;
 }
 </style>
