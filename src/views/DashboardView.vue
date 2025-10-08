@@ -1,15 +1,15 @@
 <script lang="ts">
 import AppBanner from '../components/AppBanner.vue'
 import ClubCompetitions from '../components/ClubCompetitions.vue'
-import MatchResults from '../components/MatchResults.vue'
 import NewsStatistics from '..//components/NewsStatistics.vue'
+import MatchView from './MatchView.vue'
 
 export default {
   name: 'DashboardView',
   components: {
     AppBanner,
     ClubCompetitions,
-    MatchResults,
+    MatchView,
     NewsStatistics,
   },
 }
@@ -23,7 +23,7 @@ export default {
     />
     <div class="col-span-1 md:col-span-2 lg:col-span-2 flex flex-1 flex-col w-full gap-4">
       <AppBanner class="h-full" />
-      <MatchResults class="h-full" />
+      <MatchView class="h-full" />
     </div>
     <NewsStatistics class="flex-shrink-0 w-96" />
   </div>
