@@ -90,7 +90,7 @@
 }
 
 .filter-active:hover {
-  background-color: var(--c-crimson-600) !important;
+  background-color: var(--c-crimson-600);
 }
 
 .bg-add-club {
