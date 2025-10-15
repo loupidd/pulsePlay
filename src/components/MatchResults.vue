@@ -2,28 +2,29 @@
   <div class="space-y-4">
     <!-- Match Card -->
     <div
-      v-for="match in matches"
-      :key="match.id"
-      class="main-card relative overflow-hidden rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl my-4"
-      :style="{
-        background: `linear-gradient(135deg, ${match.gradientFrom} 0%, ${match.gradientTo} 100%)`,
-      }"
+      v-for="(match, matchIndex) in matches"
+      :key="match.league.name + matchIndex"
+      class="main-card relative overflow-hidden rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl my-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
     >
       <!-- Content -->
       <div class="relative p-6 my-4">
         <!-- Header with League Info -->
         <div class="flex items-start justify-between mb-6">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 overflow-hidden flex items-center justify-center">
+            <!-- League Logo -->
+            <div
+              class="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden"
+            >
               <img
                 :src="match.league.logo"
                 :alt="match.league.name"
                 class="w-6 h-6 object-contain"
               />
             </div>
+
             <div>
-              <h3 class="text-white font-bold text-sm">{{ match.league.country }}</h3>
-              <p class="text-white/80 text-xs">{{ match.league.name }}</p>
+              <h3 class="text-gray-300 font-semibold text-sm">{{ match.league.country }}</h3>
+              <p class="text-white font-bold text-xs">{{ match.league.name }}</p>
             </div>
           </div>
           <button
@@ -49,10 +50,10 @@
         <!-- Matches List -->
         <div class="space-y-2.5">
           <div
-            v-for="game in match.games"
-            :key="game.id"
+            v-for="(game, gameIndex) in match.games"
+            :key="game.homeTeam.name + game.awayTeam.name + gameIndex"
             class="main-card flex items-center rounded-xl py-3.5 px-4 hover:bg-white/15 transition-all cursor-pointer"
-            @click="handleMatchClick(game.id)"
+            @click="handleMatchClick(matchIndex, gameIndex)"
           >
             <!-- Home Team -->
             <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -65,7 +66,7 @@
                   class="w-5 h-5 object-contain"
                 />
               </div>
-              <span class="text-white text-sm font-medium truncate">{{ game.homeTeam.name }}</span>
+              <span class="text-white font-medium truncate text-sm">{{ game.homeTeam.name }}</span>
             </div>
 
             <!-- Score -->
@@ -81,7 +82,7 @@
 
             <!-- Away Team -->
             <div class="flex items-center gap-3 flex-1 min-w-0 justify-end">
-              <span class="text-white text-sm font-medium truncate text-right">{{
+              <span class="text-white font-medium truncate text-sm text-right">{{
                 game.awayTeam.name
               }}</span>
               <div
@@ -117,7 +118,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
 interface Team {
   name: string
@@ -126,7 +128,7 @@ interface Team {
 }
 
 interface Game {
-  id: string
+  id?: string
   homeTeam: Team
   awayTeam: Team
 }
@@ -146,117 +148,43 @@ interface Match {
   isFavorite: boolean
 }
 
-// Sample data
-const matches = ref<Match[]>([
-  {
-    id: '1',
-    league: {
-      name: 'La Liga',
-      country: 'Spain',
-      logo: 'https://tmssl.akamaized.net//images/logo/homepageWappen150x150/es1.png?lm=1725974302',
-    },
-    gradientFrom: '#1e1b4b',
-    gradientTo: '#312e81',
-    isFavorite: false,
-    games: [
-      {
-        id: '1-1',
-        homeTeam: {
-          name: 'Real Madrid',
-          logo: 'https://tmssl.akamaized.net//images/wappen/head/418.png?lm=1729684474',
-          score: 3,
-        },
-        awayTeam: {
-          name: 'Barcelona',
-          logo: 'https://tmssl.akamaized.net//images/wappen/head/131.png?lm=1406739548',
-          score: 2,
-        },
-      },
-      {
-        id: '1-2',
-        homeTeam: {
-          name: 'Atletico Madrid',
-          logo: 'https://tmssl.akamaized.net//images/wappen/head/13.png?lm=1719915566',
-          score: 1,
-        },
-        awayTeam: {
-          name: 'Sevilla',
-          logo: 'https://tmssl.akamaized.net//images/wappen/head/368.png?lm=1730896593',
-          score: 1,
-        },
-      },
-      {
-        id: '1-3',
-        homeTeam: {
-          name: 'Real Sociedad',
-          logo: 'https://tmssl.akamaized.net//images/wappen/head/681.png?lm=1614795530',
-          score: 2,
-        },
-        awayTeam: {
-          name: 'Valencia',
-          logo: 'https://tmssl.akamaized.net//images/wappen/head/1049.png?lm=1406966320',
-          score: 0,
-        },
-      },
-    ],
-  },
-  {
-    id: '2',
-    league: {
-      name: 'Serie A',
-      country: 'Italy',
-      logo: 'https://tmssl.akamaized.net//images/logo/header/it1.png?lm=1656073460',
-    },
-    gradientFrom: '#064e3b',
-    gradientTo: '#0f766e',
-    isFavorite: true,
-    games: [
-      {
-        id: '2-1',
-        homeTeam: {
-          name: 'Inter Milan',
-          logo: 'https://tmssl.akamaized.net//images/wappen/head/46.png?lm=1618900989',
-          score: 2,
-        },
-        awayTeam: {
-          name: 'AC Milan',
-          logo: 'https://tmssl.akamaized.net//images/wappen/head/5.png?lm=1605166627',
-          score: 1,
-        },
-      },
-      {
-        id: '2-2',
-        homeTeam: {
-          name: 'Juventus',
-          logo: 'https://tmssl.akamaized.net//images/wappen/head/506.png?lm=1626441487',
-          score: 3,
-        },
-        awayTeam: {
-          name: 'Roma',
-          logo: 'https://tmssl.akamaized.net//images/wappen/head/12.png?lm=1751979202',
-          score: 2,
-        },
-      },
-    ],
-  },
-])
+const matches = ref<Match[]>([])
 
 const emit = defineEmits<{
   matchClick: [matchId: string]
   favoriteToggle: [matchId: string]
 }>()
 
-const handleMatchClick = (matchId: string) => {
-  emit('matchClick', matchId)
+const handleMatchClick = (matchIndex: number, gameIndex: number) => {
+  emit('matchClick', `${matchIndex}-${gameIndex}`)
 }
 
 const handleFavorite = (matchId: string) => {
   const match = matches.value.find((m) => m.id === matchId)
   if (match) {
     match.isFavorite = !match.isFavorite
-    emit('favoriteToggle', matchId)
+    emit('favoriteToggle', matchId!)
   }
 }
+// fetch data from api
+const fetchRecentMatches = async () => {
+  try {
+    const response = await axios.get('http://localhost:8080/api/matches/recent', {
+      params: {
+        league: 39, // Premier League
+        season: 2023,
+        limit: 5,
+      },
+    })
+    matches.value = response.data
+  } catch (error) {
+    console.error('Error fetching recent matches:', error)
+  }
+}
+
+onMounted(() => {
+  fetchRecentMatches()
+})
 </script>
 
 <style>
