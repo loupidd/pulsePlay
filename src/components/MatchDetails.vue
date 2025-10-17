@@ -263,9 +263,8 @@
     </div>
   </transition>
 </template>
-
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, toRef } from 'vue'
 
 interface Team {
   name: string
@@ -300,11 +299,18 @@ interface MatchDetailsType {
   isFavorite: boolean
 }
 
-const { match } = defineProps<{ match: MatchDetailsType }>()
-defineEmits(['back', 'viewClub'])
+// Props: accept the full match object
+const props = defineProps<{ match: MatchDetailsType }>()
 
+defineEmits<{
+  back: []
+  viewClub: [team: Team]
+}>()
+
+const match = toRef(props, 'match')
+
+// Local UI state
 const activeTab = ref('stats')
-
 const tabs = [
   { id: 'stats', label: 'Stats' },
   { id: 'lineups', label: 'Lineups' },
@@ -313,12 +319,13 @@ const tabs = [
 ]
 
 // Computed property to handle optional goals
-const matchGoals = computed(() => match.goals || [])
+const matchGoals = computed(() => match.value?.goals || [])
 
+// Helper
 const getBarWidth = (value: string | number, opponent: string | number): number => {
-  const numValue = typeof value === 'string' ? parseFloat(value) : value
-  const numOpponent = typeof opponent === 'string' ? parseFloat(opponent) : opponent
-  const max = Math.max(numValue, numOpponent) * 1.2
+  const numValue = typeof value === 'string' ? parseFloat(value) : (value as number)
+  const numOpponent = typeof opponent === 'string' ? parseFloat(opponent) : (opponent as number)
+  const max = Math.max(numValue || 0, numOpponent || 0) * 1.2 || 1
   return (numValue / max) * 100
 }
 </script>

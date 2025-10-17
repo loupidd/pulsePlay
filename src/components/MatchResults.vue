@@ -1,5 +1,10 @@
 <template>
   <div class="space-y-4">
+    <!-- 🆕 Debug info -->
+    <div class="bg-blue-900/50 p-4 rounded text-white text-sm mb-4">
+      <p>Matches count: {{ matches.length }}</p>
+      <p>Matches data: {{ matches }}</p>
+    </div>
     <!-- Match Card -->
     <div
       v-for="(match, matchIndex) in matches"
@@ -51,65 +56,78 @@
         <div class="space-y-2.5">
           <div
             v-for="(game, gameIndex) in match.games"
-            :key="game.homeTeam.name + game.awayTeam.name + gameIndex"
-            class="main-card flex items-center rounded-xl py-3.5 px-4 hover:bg-white/15 transition-all cursor-pointer"
-            @click="handleMatchClick(matchIndex, gameIndex)"
+            :key="game.id || game.homeTeam.name + game.awayTeam.name + gameIndex"
+            class="game-container"
           >
-            <!-- Home Team -->
-            <div class="flex items-center gap-3 flex-1 min-w-0">
-              <div
-                class="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0"
-              >
-                <img
-                  :src="game.homeTeam.logo"
-                  :alt="game.homeTeam.name"
-                  class="w-5 h-5 object-contain"
-                />
-              </div>
-              <span class="text-white font-medium truncate text-sm">{{ game.homeTeam.name }}</span>
+            <!--  League badge for each game (when multiple leagues) -->
+            <div v-if="game.league" class="league-badge-small">
+              <img :src="game.league.logo" :alt="game.league.name" class="w-4 h-4 object-contain" />
+              <span class="text-white/50 text-xs">{{ game.league.name }}</span>
             </div>
 
-            <!-- Score -->
-            <div class="flex items-center justify-center gap-4 flex-shrink-0 px-6">
-              <span class="text-white font-bold text-lg min-w-[1rem] text-center">{{
-                game.homeTeam.score
-              }}</span>
-              <span class="text-white/50 font-bold text-sm">:</span>
-              <span class="text-white font-bold text-lg min-w-[1rem] text-center">{{
-                game.awayTeam.score
-              }}</span>
-            </div>
-
-            <!-- Away Team -->
-            <div class="flex items-center gap-3 flex-1 min-w-0 justify-end">
-              <span class="text-white font-medium truncate text-sm text-right">{{
-                game.awayTeam.name
-              }}</span>
-              <div
-                class="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0"
-              >
-                <img
-                  :src="game.awayTeam.logo"
-                  :alt="game.awayTeam.name"
-                  class="w-5 h-5 object-contain"
-                />
-              </div>
-            </div>
-
-            <!-- Arrow Icon -->
-            <svg
-              class="w-4 h-4 text-white/60 ml-4 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <!-- Match row -->
+            <div
+              class="main-card flex items-center rounded-xl py-3.5 px-4 hover:bg-white/15 transition-all cursor-pointer"
+              @click="handleMatchClick(game.id)"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+              <!-- Home Team -->
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div
+                  class="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0"
+                >
+                  <img
+                    :src="game.homeTeam.logo"
+                    :alt="game.homeTeam.name"
+                    class="w-5 h-5 object-contain"
+                  />
+                </div>
+                <span class="text-white font-medium truncate text-sm">{{
+                  game.homeTeam.name
+                }}</span>
+              </div>
+
+              <!-- Score -->
+              <div class="flex items-center justify-center gap-4 flex-shrink-0 px-6">
+                <span class="text-white font-bold text-lg min-w-[1rem] text-center">{{
+                  game.homeTeam.score
+                }}</span>
+                <span class="text-white/50 font-bold text-sm">:</span>
+                <span class="text-white font-bold text-lg min-w-[1rem] text-center">{{
+                  game.awayTeam.score
+                }}</span>
+              </div>
+
+              <!-- Away Team -->
+              <div class="flex items-center gap-3 flex-1 min-w-0 justify-end">
+                <span class="text-white font-medium truncate text-sm text-right">{{
+                  game.awayTeam.name
+                }}</span>
+                <div
+                  class="w-6 h-6 rounded-full bg-white flex items-center justify-center flex-shrink-0"
+                >
+                  <img
+                    :src="game.awayTeam.logo"
+                    :alt="game.awayTeam.name"
+                    class="w-5 h-5 object-contain"
+                  />
+                </div>
+              </div>
+
+              <!-- Arrow Icon -->
+              <svg
+                class="w-4 h-4 text-white/60 ml-4 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -127,16 +145,17 @@ interface Team {
   score: number
 }
 
-interface Game {
-  id?: string
-  homeTeam: Team
-  awayTeam: Team
-}
-
 interface League {
   name: string
   country: string
   logo: string
+}
+
+interface Game {
+  id?: string
+  league?: League
+  homeTeam: Team
+  awayTeam: Team
 }
 
 interface Match {
@@ -155,30 +174,44 @@ const emit = defineEmits<{
   favoriteToggle: [matchId: string]
 }>()
 
-const handleMatchClick = (matchIndex: number, gameIndex: number) => {
-  emit('matchClick', `${matchIndex}-${gameIndex}`)
+// Handle match click - Directly accept matchId and emit it
+const handleMatchClick = (gameId?: string) => {
+  if (gameId) {
+    emit('matchClick', gameId)
+  }
 }
 
 const handleFavorite = (matchId: string) => {
   const match = matches.value.find((m) => m.id === matchId)
   if (match) {
     match.isFavorite = !match.isFavorite
-    emit('favoriteToggle', matchId!)
+    emit('favoriteToggle', matchId)
   }
 }
+
 // fetch data from api
 const fetchRecentMatches = async () => {
+  console.log('🔄 Starting to fetch matches...')
   try {
+    console.log('📡 Making API call to:', 'http://localhost:8080/api/matches/recent')
     const response = await axios.get('http://localhost:8080/api/matches/recent', {
       params: {
-        league: 39, // Premier League
         season: 2023,
-        limit: 5,
+        limit: 30,
       },
     })
+    console.log('✅ API Response received:', response)
+    console.log('📊 Response data:', response.data)
+    console.log('📏 Data length:', response.data?.length)
+
     matches.value = response.data
+    console.log('✅ Matches assigned:', matches.value)
   } catch (error) {
-    console.error('Error fetching recent matches:', error)
+    console.error('❌ Error fetching recent matches:', error)
+    if (axios.isAxiosError(error)) {
+      console.error('Response data:', error.response?.data)
+      console.error('Response status:', error.response?.status)
+    }
   }
 }
 
@@ -187,9 +220,22 @@ onMounted(() => {
 })
 </script>
 
-<style>
+<style scoped>
 .main-card {
   margin-bottom: 12px;
   margin-top: 12px;
+}
+/* League Badge Styling */
+.game-container {
+  margin-bottom: 8px;
+}
+
+.league-badge-small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+  margin-left: 4px;
 }
 </style>
