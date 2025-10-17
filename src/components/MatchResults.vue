@@ -1,10 +1,5 @@
 <template>
   <div class="space-y-4">
-    <!-- 🆕 Debug info -->
-    <div class="bg-blue-900/50 p-4 rounded text-white text-sm mb-4">
-      <p>Matches count: {{ matches.length }}</p>
-      <p>Matches data: {{ matches }}</p>
-    </div>
     <!-- Match Card -->
     <div
       v-for="(match, matchIndex) in matches"
