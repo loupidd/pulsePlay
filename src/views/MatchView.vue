@@ -9,7 +9,7 @@
         v-else-if="selectedMatch"
         :match="selectedMatch"
         @back="selectedMatch = null"
-        @club-click="handleClubClick"
+        @view-club="handleClubClick"
         key="details"
       />
     </transition>
@@ -32,6 +32,7 @@ import { ref } from 'vue'
 import MatchDetails from '../components/MatchDetails.vue'
 import MatchResults from '@/components/MatchResults.vue'
 import ClubDetails from '@/components/ClubDetails.vue'
+import axios from 'axios'
 
 // ----- TYPES -----
 interface Team {
@@ -48,12 +49,12 @@ interface MatchDetailsType {
   homeTeam: Team
   awayTeam: Team
   stats: { label: string; home: string; away: string }[]
+  goals?: { player: string; minute: string; team: 'home' | 'away'; icon: string }[]
   gradientFrom: string
   gradientTo: string
   isFavorite: boolean
 }
 
-// Extract the correct prop type from ClubDetails
 type ClubDetailsType = InstanceType<typeof ClubDetails>['$props']['club']
 
 // ----- STATE -----
@@ -61,33 +62,45 @@ const selectedMatch = ref<MatchDetailsType | null>(null)
 const selectedClub = ref<ClubDetailsType | null>(null)
 
 // ----- HANDLERS -----
-function handleMatchClick(matchId: string) {
-  selectedClub.value = null // reset any open club
-  selectedMatch.value = {
-    id: matchId,
-    competitions: 'Serie A',
-    date: 'October 6, 2025',
-    homeTeam: {
-      name: 'AC Milan',
-      logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_AC_Milan.svg',
-      score: 3,
-      lineup: ['Leão', 'Rafael Leão', 'Benzema', 'Kaká', 'Ibrahimović'],
-    },
-    awayTeam: {
-      name: 'Inter Milan',
-      logo: 'https://upload.wikimedia.org/wikipedia/commons/0/05/Inter_Milan_2021.svg',
-      score: 2,
-      lineup: ['Lukaku', 'Džeko', 'Martínez', 'Brozović', 'De Vrij'],
-    },
-    stats: [
-      { label: 'Possession', home: '60%', away: '40%' },
-      { label: 'Shots on Target', home: '8', away: '4' },
-      { label: 'Fouls', home: '10', away: '15' },
-      { label: 'Corners', home: '7', away: '3' },
-    ],
-    gradientFrom: 'from-red-600',
-    gradientTo: 'to-red-800',
-    isFavorite: false,
+async function handleMatchClick(fixtureId: string) {
+  selectedClub.value = null
+
+  try {
+    const response = await axios.get(`http://localhost:8080/api/match-details/${fixtureId}`)
+    const data = response.data
+
+    // Map backend JSON to MatchDetailsType (matching your backend structure)
+    selectedMatch.value = {
+      id: data.id,
+      competitions: data.competitions,
+      date: new Date(data.date).toLocaleString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+      }),
+      homeTeam: {
+        name: data.homeTeam.name,
+        logo: data.homeTeam.logo,
+        score: data.homeTeam.score,
+        lineup: data.homeTeam.lineup || [],
+      },
+      awayTeam: {
+        name: data.awayTeam.name,
+        logo: data.awayTeam.logo,
+        score: data.awayTeam.score,
+        lineup: data.awayTeam.lineup || [],
+      },
+      stats: data.stats || [],
+      goals: data.goals || [],
+      gradientFrom: data.gradientFrom || '#1e1b4b',
+      gradientTo: data.gradientTo || '#312e81',
+      isFavorite: data.isFavorite || false,
+    }
+  } catch (error) {
+    console.error('Error fetching match details:', error)
+    alert('Failed to load match details. Please try again.')
   }
 }
 
@@ -110,6 +123,36 @@ function handleClubClick(team: Team) {
     competition: '',
     group: '',
     standings: [],
-  } as unknown as ClubDetailsType // Type assertion to bypass incomplete data
+  } as unknown as ClubDetailsType
 }
 </script>
+
+<style scoped>
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
+.slide-fade-leave-to {
+  transform: translateX(-20px);
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
