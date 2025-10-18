@@ -7,12 +7,17 @@
   --c-white: #ffffff;
   --c-black: #111827; /* Charcoal main */
 
-  /* Crimson */
+  /* Crimson Shades */
   --c-crimson-100: #fee2e2;
+  --c-crimson-200: #fecaca;
   --c-crimson-300: #fca5a5;
+  --c-crimson-400: #f87171;
   --c-crimson-500: #dc2626; /* Main */
+  --c-crimson-600: #b91c1c;
   --c-crimson-700: #991b1b;
+  --c-crimson-800: #7f1d1d;
   --c-crimson-900: #450a0a;
+  --c-crimson-1000: #250505;
 
   /* Charcoal */
   --c-charcoal-100: #f3f4f6;
