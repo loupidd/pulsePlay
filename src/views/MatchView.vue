@@ -7,6 +7,7 @@
       <!-- Match Details -->
       <MatchDetails
         v-else-if="selectedMatch && !selectedClub"
+        v-else-if="selectedMatch"
         :match="selectedMatch"
         @back="selectedMatch = null"
         @view-club="handleClubClick"
@@ -18,6 +19,15 @@
         v-else-if="selectedClub"
         :club="selectedClub"
         @back="handleBackFromClub"
+    </transition>
+
+    <!-- Club Details Overlay -->
+    <transition name="fade">
+      <ClubDetails
+        v-if="selectedClub"
+        :club="selectedClub"
+        class="absolute top-4 right-4 z-50"
+        @close="selectedClub = null"
         key="club"
       />
     </transition>
@@ -69,6 +79,7 @@ async function handleMatchClick(fixtureId: string) {
     const data = response.data
 
     // Map backend JSON to MatchDetailsType
+    // Map backend JSON to MatchDetailsType (matching your backend structure)
     selectedMatch.value = {
       id: data.id,
       competitions: data.competitions,
@@ -177,6 +188,15 @@ function setBasicClubData(team: Team) {
     venueCity: '',
     recentForm: [],
     recentOpponents: [],
+function handleClubClick(team: Team) {
+  selectedClub.value = {
+    name: team.name,
+    logo: team.logo,
+    fifaRank: 0,
+    highestRank: { rank: 0, date: '' },
+    recentForm: [],
+    recentOpponents: [],
+    upcomingFixtures: [],
     nextMatch: {
       competition: '',
       opponent: { name: '', logo: '' },
@@ -207,6 +227,11 @@ function extractTeamIdFromLogo(logoUrl: string): string | null {
   // API-SPORTS format: https://media.api-sports.io/football/teams/33.png
   const match = logoUrl.match(/\/teams\/(\d+)\.png/)
   return match ? match[1] : null
+    lineup: team.lineup.map((playerName, index) => ({ name: playerName, number: index + 1 })),
+    competition: '',
+    group: '',
+    standings: [],
+  } as unknown as ClubDetailsType
 }
 </script>
 
