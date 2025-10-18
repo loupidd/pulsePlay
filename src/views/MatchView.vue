@@ -6,21 +6,18 @@
 
       <!-- Match Details -->
       <MatchDetails
-        v-else-if="selectedMatch"
+        v-else-if="selectedMatch && !selectedClub"
         :match="selectedMatch"
         @back="selectedMatch = null"
         @view-club="handleClubClick"
         key="details"
       />
-    </transition>
 
-    <!-- Club Details Overlay -->
-    <transition name="fade">
+      <!-- Club Details (Full Screen) -->
       <ClubDetails
-        v-if="selectedClub"
+        v-else-if="selectedClub"
         :club="selectedClub"
-        class="absolute top-4 right-4 z-50"
-        @close="selectedClub = null"
+        @back="handleBackFromClub"
         key="club"
       />
     </transition>
@@ -36,6 +33,7 @@ import axios from 'axios'
 
 // ----- TYPES -----
 interface Team {
+  id?: string | number
   name: string
   logo: string
   score: number
@@ -60,6 +58,7 @@ type ClubDetailsType = InstanceType<typeof ClubDetails>['$props']['club']
 // ----- STATE -----
 const selectedMatch = ref<MatchDetailsType | null>(null)
 const selectedClub = ref<ClubDetailsType | null>(null)
+const isLoadingClub = ref(false)
 
 // ----- HANDLERS -----
 async function handleMatchClick(fixtureId: string) {
@@ -69,7 +68,7 @@ async function handleMatchClick(fixtureId: string) {
     const response = await axios.get(`http://localhost:8080/api/match-details/${fixtureId}`)
     const data = response.data
 
-    // Map backend JSON to MatchDetailsType (matching your backend structure)
+    // Map backend JSON to MatchDetailsType
     selectedMatch.value = {
       id: data.id,
       competitions: data.competitions,
@@ -81,12 +80,14 @@ async function handleMatchClick(fixtureId: string) {
         minute: 'numeric',
       }),
       homeTeam: {
+        id: data.homeTeam.id,
         name: data.homeTeam.name,
         logo: data.homeTeam.logo,
         score: data.homeTeam.score,
         lineup: data.homeTeam.lineup || [],
       },
       awayTeam: {
+        id: data.awayTeam.id,
         name: data.awayTeam.name,
         logo: data.awayTeam.logo,
         score: data.awayTeam.score,
@@ -104,26 +105,108 @@ async function handleMatchClick(fixtureId: string) {
   }
 }
 
-function handleClubClick(team: Team) {
+async function handleClubClick(team: Team) {
+  if (isLoadingClub.value) return
+
+  isLoadingClub.value = true
+
+  try {
+    // Extract team ID from team object or logo URL
+    const teamId = team.id || extractTeamIdFromLogo(team.logo)
+
+    if (!teamId) {
+      console.error('No team ID available for:', team.name)
+      // Fallback to basic data
+      setBasicClubData(team)
+      return
+    }
+
+    console.log('Fetching club details for team ID:', teamId)
+
+    // Fetch real club data from your backend
+    const response = await axios.get(`http://localhost:8080/api/clubs/${teamId}?season=2023`)
+    const data = response.data
+
+    // Map backend data to ClubDetailsType
+    selectedClub.value = {
+      name: data.name || team.name,
+      logo: data.logo || team.logo,
+      country: data.country || '',
+      founded: data.founded || 0,
+      venue: data.venue || '',
+      venueCapacity: data.venueCapacity || 0,
+      venueCity: data.venueCity || '',
+      recentForm: data.recentForm || [],
+      recentOpponents: data.recentOpponents || [],
+      nextMatch: data.nextMatch || {
+        competition: '',
+        opponent: { name: '', logo: '' },
+        time: '',
+        date: '',
+      },
+      lineup:
+        data.lineup ||
+        team.lineup.map((playerName, index) => ({
+          name: playerName,
+          number: index + 1,
+        })),
+      competition: data.competition || '',
+      upcomingFixtures: data.upcomingFixtures || [],
+      standings: data.standings || [],
+      statistics: data.statistics || undefined,
+    } as ClubDetailsType
+
+    console.log('Club details loaded successfully:', selectedClub.value.name)
+  } catch (error) {
+    console.error('Error fetching club details:', error)
+    // Fallback to basic data if API fails
+    setBasicClubData(team)
+  } finally {
+    isLoadingClub.value = false
+  }
+}
+
+function setBasicClubData(team: Team) {
   selectedClub.value = {
     name: team.name,
     logo: team.logo,
-    fifaRank: 0,
-    highestRank: { rank: 0, date: '' },
+    country: '',
+    founded: 0,
+    venue: '',
+    venueCapacity: 0,
+    venueCity: '',
     recentForm: [],
     recentOpponents: [],
-    upcomingFixtures: [],
     nextMatch: {
       competition: '',
       opponent: { name: '', logo: '' },
       time: '',
       date: '',
     },
-    lineup: team.lineup.map((playerName, index) => ({ name: playerName, number: index + 1 })),
+    lineup: team.lineup.map((playerName, index) => ({
+      name: playerName,
+      number: index + 1,
+    })),
     competition: '',
-    group: '',
+    upcomingFixtures: [],
     standings: [],
-  } as unknown as ClubDetailsType
+    statistics: undefined,
+  } as ClubDetailsType
+}
+
+function handleBackFromClub() {
+  console.log('Back from club details to match details')
+  selectedClub.value = null
+  // selectedMatch remains set, so it will show the match details again
+}
+
+// Helper function to extract team ID from logo URL
+function extractTeamIdFromLogo(logoUrl: string): string | null {
+  if (!logoUrl) return null
+
+  // API-SPORTS format: https://media.api-sports.io/football/teams/33.png
+  const match = logoUrl.match(/\/teams\/(\d+)\.png/)
+  return match ? match[1] : null
 }
 </script>
 
