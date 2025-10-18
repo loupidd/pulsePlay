@@ -22,23 +22,6 @@
         </button>
 
         <div class="header-actions">
-          <button class="action-button">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <span>Sync to calendar</span>
-          </button>
           <button class="follow-button">Follow</button>
         </div>
       </div>
@@ -56,7 +39,6 @@
             {{ club.venue }}
             <span v-if="club.venueCapacity">({{ club.venueCapacity.toLocaleString() }})</span>
           </p>
-          <p class="club-rank">FIFA #{{ club.fifaRank }}</p>
         </div>
       </div>
 
@@ -110,9 +92,6 @@
           <!-- Team Form -->
           <div v-if="club.recentForm && club.recentForm.length > 0" class="section-card">
             <h3 class="section-title">Recent Form</h3>
-          <!-- Team Form -->
-          <div class="section-card">
-            <h3 class="section-title">Team form</h3>
             <div class="form-results">
               <div
                 v-for="(result, index) in club.recentForm"
@@ -126,7 +105,6 @@
               v-if="club.recentOpponents && club.recentOpponents.length > 0"
               class="form-opponents"
             >
-            <div class="form-opponents">
               <div
                 v-for="(opponent, index) in club.recentOpponents"
                 :key="index"
@@ -142,20 +120,6 @@
             <div class="section-header">
               <h3 class="section-title">Next Match</h3>
               <span v-if="club.nextMatch.competition" class="competition-badge">
-          <div class="section-card">
-            <div class="section-header">
-              <h3 class="section-title">Next match</h3>
-              <span class="competition-badge">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-3 h-3"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H4a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H2a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z"
-                  />
-                </svg>
                 {{ club.nextMatch.competition }}
               </span>
             </div>
@@ -167,8 +131,6 @@
               <div class="match-time">
                 <div class="match-time-value">{{ club.nextMatch.time || 'TBD' }}</div>
                 <div class="match-date">{{ club.nextMatch.date || 'TBD' }}</div>
-                <div class="match-time-value">{{ club.nextMatch.time }}</div>
-                <div class="match-date">{{ club.nextMatch.date }}</div>
               </div>
               <div class="match-team">
                 <img
@@ -187,109 +149,6 @@
             class="section-card"
           >
             <h3 class="section-title">Upcoming Fixtures</h3>
-          <!-- Season Stats -->
-          <div class="section-card">
-            <div class="section-header">
-              <h3 class="section-title">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H4a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H2a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z"
-                  />
-                </svg>
-                Season stats
-              </h3>
-              <span class="subtitle">Last starting XI</span>
-            </div>
-            <div class="formation">
-              <div v-for="(player, index) in club.lineup" :key="index" class="player-card">
-                <div class="player-avatar">
-                  <img v-if="player.photo" :src="player.photo" :alt="player.name" />
-                  <div v-else class="player-placeholder"></div>
-                </div>
-                <div class="player-number">{{ player.number }}</div>
-                <div class="player-name">{{ player.name }}</div>
-                <div v-if="player.stats" class="player-stats">
-                  <span v-if="player.stats.goals" class="stat-badge"
-                    >⚽ {{ player.stats.goals }}</span
-                  >
-                  <span v-if="player.stats.assists" class="stat-badge"
-                    >🅰️ {{ player.stats.assists }}</span
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- FIFA Rank Chart -->
-          <div class="section-card">
-            <div class="section-header">
-              <h3 class="section-title">FIFA rank</h3>
-              <div class="rank-info">
-                <span class="current-rank">{{ club.fifaRank }}</span>
-                <span class="rank-history"
-                  >Highest rank: {{ club.highestRank.rank }} ({{ club.highestRank.date }})</span
-                >
-              </div>
-            </div>
-            <div class="rank-chart">
-              <svg viewBox="0 0 900 200" class="chart-svg">
-                <!-- Y-axis labels -->
-                <text x="10" y="20" class="axis-label">1</text>
-                <text x="10" y="70" class="axis-label">41</text>
-                <text x="10" y="120" class="axis-label">81</text>
-                <text x="10" y="170" class="axis-label">155</text>
-
-                <!-- Grid lines -->
-                <line x1="40" y1="20" x2="900" y2="20" class="grid-line" />
-                <line x1="40" y1="70" x2="900" y2="70" class="grid-line" />
-                <line x1="40" y1="120" x2="900" y2="120" class="grid-line" />
-                <line x1="40" y1="170" x2="900" y2="170" class="grid-line" />
-
-                <!-- Rank line -->
-                <path
-                  d="M 40 80 L 100 75 L 160 78 L 220 82 L 280 79 L 340 73 L 400 76 L 460 80 L 520 75 L 580 78 L 640 82 L 700 79 L 760 75 L 820 77 L 880 80"
-                  fill="none"
-                  stroke="var(--c-green-500)"
-                  stroke-width="2"
-                />
-
-                <!-- X-axis labels -->
-                <text x="40" y="195" class="axis-label">1994</text>
-                <text x="160" y="195" class="axis-label">1998</text>
-                <text x="280" y="195" class="axis-label">2002</text>
-                <text x="400" y="195" class="axis-label">2006</text>
-                <text x="520" y="195" class="axis-label">2010</text>
-                <text x="640" y="195" class="axis-label">2014</text>
-                <text x="760" y="195" class="axis-label">2018</text>
-                <text x="880" y="195" class="axis-label">2025</text>
-              </svg>
-            </div>
-          </div>
-
-          <!-- Upcoming Fixtures -->
-          <div class="section-card">
-            <div class="section-header">
-              <h3 class="section-title">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-4 h-4"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H4a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H2a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z"
-                  />
-                </svg>
-                {{ club.competition }}
-              </h3>
-            </div>
-
-            <!-- Fixtures List -->
             <div class="fixtures-list">
               <div
                 v-for="(fixture, index) in club.upcomingFixtures"
@@ -314,28 +173,6 @@
                   </div>
                   <div class="fixture-time">{{ fixture.time }}</div>
                 </div>
-                    <span class="fixture-team">{{ fixture.home }}</span>
-                    <span class="vs">vs</span>
-                    <span class="fixture-team">{{ fixture.away }}</span>
-                  </div>
-                  <div class="fixture-time">{{ fixture.time }}</div>
-                </div>
-                <button class="fixture-arrow">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
               </div>
             </div>
           </div>
@@ -390,11 +227,6 @@
         <div v-if="activeTab === 'table'" class="tab-content">
           <div v-if="club.standings && club.standings.length > 0" class="section-card">
             <h3 class="section-title">{{ club.competition || 'League Table' }}</h3>
-        <!-- Table Tab -->
-        <div v-if="activeTab === 'table'" class="tab-content">
-          <div class="section-card">
-            <h3 class="section-title">{{ club.competition }}</h3>
-            <p class="section-subtitle">Grp. {{ club.group }}</p>
 
             <div class="table-container">
               <table class="standings-table">
@@ -411,11 +243,6 @@
                     <th>GD</th>
                     <th>PTS</th>
                     <th>Form</th>
-                    <th>+/-</th>
-                    <th>GD</th>
-                    <th>PTS</th>
-                    <th>Form</th>
-                    <th>Next</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -426,11 +253,6 @@
                   >
                     <td>
                       <span class="position-indicator">{{ team.position }}</span>
-                    :key="team.position"
-                    :class="{ 'is-club': team.name === club.name }"
-                  >
-                    <td>
-                      <span :class="['position-indicator', team.status]">{{ team.position }}</span>
                     </td>
                     <td>
                       <div class="team-cell">
@@ -447,8 +269,6 @@
                     <td :class="team.goalDifference >= 0 ? 'positive' : 'negative'">
                       {{ team.goalDifference > 0 ? '+' : '' }}{{ team.goalDifference }}
                     </td>
-                    <td>{{ team.goalsFor }}-{{ team.goalsAgainst }}</td>
-                    <td>{{ team.goalDifference > 0 ? '+' : '' }}{{ team.goalDifference }}</td>
                     <td class="points">{{ team.points }}</td>
                     <td>
                       <div class="form-badges">
@@ -461,20 +281,6 @@
                         </span>
                       </div>
                     </td>
-                          v-for="(result, i) in team.form"
-                          :key="i"
-                          :class="['form-mini', result]"
-                          >{{ result }}</span
-                        >
-                      </div>
-                    </td>
-                    <td>
-                      <img
-                        :src="team.nextOpponent"
-                        :alt="'Next opponent'"
-                        class="team-logo-small"
-                      />
-                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -485,25 +291,6 @@
         <!-- Empty State -->
         <div v-if="!hasAnyData" class="section-card placeholder">
           <p>No data available for this club at the moment.</p>
-
-            <div class="legend">
-              <div class="legend-item">
-                <span class="legend-dot qualified"></span>
-                <span>Qualification next stage</span>
-              </div>
-              <div class="legend-item">
-                <span class="legend-dot possible"></span>
-                <span>Possible qualification next stage</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Other tabs placeholder -->
-        <div v-if="activeTab !== 'overview' && activeTab !== 'table'" class="tab-content">
-          <div class="section-card placeholder">
-            <p>{{ activeTab }} content coming soon...</p>
-          </div>
         </div>
       </div>
     </div>
@@ -512,7 +299,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { ref } from 'vue'
 
 interface RecentForm {
   score: string
@@ -530,8 +316,6 @@ interface Player {
   name: string
   position?: string
   age?: number
-  number: number
-  name: string
   photo?: string
   stats?: {
     goals?: number
@@ -558,13 +342,6 @@ interface Standing {
   name: string
   logo: string
   points: number
-  time: string
-}
-
-interface StandingsTeam {
-  position: number
-  name: string
-  logo: string
   played: number
   won: number
   drawn: number
@@ -583,10 +360,6 @@ interface TeamStatistics {
   losses: number
   goalsFor: number
   goalsAgainst: number
-  points: number
-  form: string[]
-  nextOpponent: string
-  status?: 'qualified' | 'possible'
 }
 
 interface ClubDetailsType {
@@ -610,25 +383,6 @@ interface ClubDetailsType {
   upcomingFixtures: Fixture[]
   standings?: Standing[]
   statistics?: TeamStatistics
-  fifaRank: number
-  highestRank: {
-    rank: number
-    date: string
-  }
-  recentForm: RecentForm[]
-  recentOpponents: Opponent[]
-  nextMatch: {
-    competition: ''
-    opponent: { name: ''; logo: '' }
-    time: ''
-    date: ''
-  }
-
-  lineup: Player[]
-  competition: string
-  group: string
-  standings: StandingsTeam[]
-  upcomingFixtures: Fixture[]
 }
 
 const { club } = defineProps<{ club: ClubDetailsType }>()
@@ -898,15 +652,6 @@ onMounted(() => {
   margin-top: 0.25rem;
 }
 
-  { id: 'table', label: 'Table' },
-  { id: 'fixtures', label: 'Fixtures' },
-  { id: 'squad', label: 'Squad' },
-  { id: 'stats', label: 'Stats' },
-  { id: 'history', label: 'History' },
-]
-</script>
-
-<style scoped>
 .club-details {
   background-color: var(--color-background);
   min-height: 100vh;
