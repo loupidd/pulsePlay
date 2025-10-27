@@ -6,7 +6,7 @@
     <div class="flex items-center justify-between px-1">
       <h2 class="text-base sm:text-lg font-semibold text-white">Clubs & Competitions</h2>
       <button
-        v-if="selectedFilters.length > 0"
+        v-if="store.selectedFilters.length > 0"
         @click="clearAllFilters"
         class="text-xs text-white/60 hover:text-white transition-colors px-2 py-1 rounded-lg hover:bg-white/5"
       >
@@ -15,13 +15,13 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex flex-col items-center justify-center py-12 gap-3">
+    <div v-if="store.loading" class="flex flex-col items-center justify-center py-12 gap-3">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
       <p class="text-sm text-white/60">Loading competitions...</p>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="flex flex-col items-center justify-center py-12 gap-3 px-4">
+    <div v-else-if="store.error" class="flex flex-col items-center justify-center py-12 gap-3 px-4">
       <svg class="w-12 h-12 text-red-400/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           stroke-linecap="round"
@@ -30,9 +30,9 @@
           d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      <p class="text-sm text-white/60 text-center">{{ error }}</p>
+      <p class="text-sm text-white/60 text-center">{{ store.error }}</p>
       <button
-        @click="fetchLeaguesAndTeams"
+        @click="store.fetchLeaguesAndTeams()"
         class="text-xs text-white/80 hover:text-white px-4 py-2 bg-white/10 rounded-lg hover:bg-white/15 transition-colors"
       >
         Retry
@@ -42,24 +42,19 @@
     <!-- Content -->
     <template v-else>
       <!-- Active Filters -->
-      <div v-if="selectedFilters.length > 0" class="flex flex-col gap-2">
+      <div v-if="store.selectedFilters.length > 0" class="flex flex-col gap-2 mb-6">
         <span class="text-xs text-white/60 px-1"
-          >Active Filters ({{ selectedFilters.length }})</span
+          >Active Filters ({{ store.selectedFilters.length }})</span
         >
         <div class="flex flex-wrap gap-2">
           <div
-            v-for="filterId in selectedFilters"
-            :key="'active-' + filterId"
+            v-for="filter in store.selectedFilters"
+            :key="'active-' + filter.id"
             class="active-filter-chip"
           >
-            <div
-              class="chip-icon"
-              :style="{
-                backgroundImage: `url(${getItemById(filterId)?.image})`,
-              }"
-            ></div>
-            <span class="chip-text">{{ getItemById(filterId)?.name }}</span>
-            <button @click="removeFilter(filterId)" class="chip-remove">
+            <div class="chip-icon" :style="{ backgroundImage: `url(${filter.image})` }"></div>
+            <span class="chip-text">{{ filter.name }}</span>
+            <button @click="removeFilter(filter.id)" class="chip-remove">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -113,8 +108,8 @@
           </div>
         </div>
 
-        <!-- All Competitions -->
-        <div v-for="competition in competitions" :key="competition.id">
+        <!-- Only show competitions that are selected -->
+        <div v-for="competition in selectedCompetitions" :key="competition.id">
           <!-- Competition -->
           <div class="flex items-center gap-2 mb-3 sm:mb-4">
             <div
@@ -177,7 +172,7 @@
           </div>
         </div>
 
-        <!-- Add button -->
+        <!-- Add Filter Button -->
         <div
           class="filter-item flex items-center gap-2.5 sm:gap-3 px-3 py-3 rounded-xl cursor-pointer transition-all border border-color justify-center touch-manipulation"
           @click="showModal = true"
@@ -197,14 +192,214 @@
     <FilterModal
       :isOpen="showModal"
       :items="availableItems"
-      :selectedFilters="selectedFilters"
+      :selectedFilters="store.selectedFilters.map((f) => f.id)"
       @close="showModal = false"
       @add-item="onAddItem"
     />
   </div>
 </template>
 
+<script lang="ts">
+import { defineComponent } from 'vue'
+import FilterModal from '../components/FilterModal.vue'
+import { useFilterStore, type FilterItem } from '@/stores/useFilterStore'
+
+interface Competition {
+  id: number
+  name: string
+  image: string
+  country: string
+  clubs: Club[]
+}
+interface Club {
+  id: number
+  name: string
+  image: string
+  country: string
+}
+
+export default defineComponent({
+  name: 'ClubCompetitions',
+  components: { FilterModal },
+  data() {
+    return {
+      showModal: false,
+    }
+  },
+  setup() {
+    const store = useFilterStore()
+    return { store }
+  },
+  computed: {
+    allItems(): FilterItem[] {
+      const competitions = this.store.competitions.map((comp) => ({
+        id: comp.id,
+        name: comp.name,
+        image: comp.image,
+        type: 'competition' as const,
+      }))
+      const clubs = this.store.competitions.flatMap((comp) =>
+        comp.clubs.map((club) => ({
+          id: club.id,
+          name: club.name,
+          image: club.image,
+          type: 'club' as const,
+        })),
+      )
+      return [...competitions, ...clubs]
+    },
+    availableItems(): FilterItem[] {
+      return this.allItems.filter(
+        (item) => !this.store.selectedFilters.some((f) => f.id === item.id),
+      )
+    },
+    favoriteCompetitions(): Competition[] {
+      return this.store.competitions.filter((comp) => this.store.favorites.includes(comp.id))
+    },
+    // Only show competitions that have been selected as filters
+    selectedCompetitions(): Competition[] {
+      return this.store.competitions.filter((comp) =>
+        this.store.selectedFilters.some((f) => f.id === comp.id && f.type === 'competition'),
+      )
+    },
+  },
+  mounted() {
+    this.store.loadFavoritesFromStorage()
+  },
+  methods: {
+    toggleFilter(id: number) {
+      const item = this.getItemById(id)
+      if (!item) return
+      if (this.store.selectedFilters.some((f) => f.id === id)) {
+        this.store.removeFilter(id)
+      } else {
+        this.store.addFilter(item)
+      }
+    },
+    removeFilter(id: number) {
+      this.store.removeFilter(id)
+    },
+    clearAllFilters() {
+      this.store.clearFilters()
+    },
+    isSelected(id: number) {
+      return this.store.selectedFilters.some((f) => f.id === id)
+    },
+    onAddItem(item: { id: number; name: string; image?: string; type: string }) {
+      // Only add if image exists and type is valid
+      if (item.image && (item.type === 'club' || item.type === 'competition')) {
+        this.store.addFilter({
+          id: item.id,
+          name: item.name,
+          image: item.image,
+          type: item.type,
+        })
+      }
+    },
+    toggleFavorite(id: number) {
+      this.store.toggleFavorite(id)
+    },
+    isFavorite(id: number) {
+      return this.store.favorites.includes(id)
+    },
+    getItemById(id: number) {
+      return this.allItems.find((item) => item.id === id)
+    },
+  },
+  watch: {
+    showModal(newVal) {
+      // Fetch competitions when modal opens (first time only)
+      if (newVal && this.store.competitions.length === 0) {
+        this.store.fetchLeaguesAndTeams()
+      }
+    },
+  },
+})
+</script>
+
 <style scoped>
+.filter-item {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.filter-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.filter-active {
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
+
+.active-filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 0.875rem;
+}
+
+.chip-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background-color: white;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  flex-shrink: 0;
+}
+
+.chip-text {
+  font-weight: 500;
+}
+
+.chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.125rem;
+  border-radius: 9999px;
+  transition: background-color 0.2s;
+}
+
+.chip-remove:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.favorite-btn {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.favorite-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(251, 191, 36, 0.8);
+}
+
+.favorite-active {
+  color: rgb(251, 191, 36);
+}
+
+.border-color {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.bg-add-club {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.bg-plus {
+  background: rgba(255, 255, 255, 0.6);
+}
+
 .filter-item {
   margin-bottom: 0;
   min-height: 44px; /* Minimum touch target size */
@@ -403,226 +598,3 @@
   }
 }
 </style>
-
-<script lang="ts">
-import FilterModal from '../components/FilterModal.vue'
-import axios from 'axios'
-
-interface LeagueResponse {
-  id: number
-  name: string
-  logo: string
-  country: string
-}
-
-interface TeamResponse {
-  id: number
-  name: string
-  logo: string
-  country: string
-}
-
-interface Competition {
-  id: number
-  name: string
-  image: string
-  country: string
-  clubs: Club[]
-}
-
-interface Club {
-  id: number
-  name: string
-  image: string
-  country: string
-}
-
-interface FilterItem {
-  id: number
-  name: string
-  image: string
-  type: string
-}
-
-export default {
-  name: 'ClubCompetitions',
-  components: { FilterModal },
-  data() {
-    return {
-      showModal: false,
-      selectedFilters: [] as number[],
-      favorites: [] as number[],
-      competitions: [] as Competition[],
-      loading: false,
-      error: null as string | null,
-    }
-  },
-  computed: {
-    allItems(): FilterItem[] {
-      const competitions = this.competitions.map((comp) => ({
-        id: comp.id,
-        name: comp.name,
-        image: comp.image,
-        type: 'competition',
-      }))
-      const clubs = this.competitions.flatMap((comp) =>
-        comp.clubs.map((club) => ({
-          id: club.id,
-          name: club.name,
-          image: club.image,
-          type: 'club',
-        })),
-      )
-      return [...competitions, ...clubs]
-    },
-    availableItems(): FilterItem[] {
-      return this.allItems.filter((item) => !this.selectedFilters.includes(item.id))
-    },
-    favoriteCompetitions(): Competition[] {
-      return this.competitions.filter((comp) => this.favorites.includes(comp.id))
-    },
-  },
-  mounted() {
-    this.loadFromLocalStorage()
-    this.fetchLeaguesAndTeams()
-  },
-  methods: {
-    async fetchLeaguesAndTeams() {
-      this.loading = true
-      this.error = null
-
-      try {
-        console.log('Fetching available leagues...')
-        const leaguesResponse = await axios.get('http://localhost:8080/api/matches/leagues')
-        const leagues = leaguesResponse.data
-
-        console.log('Fetched leagues:', leagues)
-
-        const competitionsWithTeams = await Promise.all(
-          leagues.map(async (league: LeagueResponse) => {
-            try {
-              console.log('Fetching teams for league:', league.name)
-              const teamsResponse = await axios.get('http://localhost:8080/api/matches/teams', {
-                params: {
-                  league: league.id,
-                  season: 2022,
-                },
-              })
-
-              const teams = teamsResponse.data.slice(0, 10)
-
-              return {
-                id: league.id,
-                name: league.name,
-                image: league.logo,
-                country: league.country,
-                clubs: teams.map((team: TeamResponse) => ({
-                  id: team.id,
-                  name: team.name,
-                  image: team.logo,
-                  country: team.country,
-                })),
-              }
-            } catch (error) {
-              console.error(`Error fetching teams for league ${league.name}:`, error)
-              return {
-                id: league.id,
-                name: league.name,
-                image: league.logo,
-                country: league.country,
-                clubs: [],
-              }
-            }
-          }),
-        )
-
-        this.competitions = competitionsWithTeams
-        console.log('All competitions loaded:', this.competitions)
-      } catch (err) {
-        console.error('Error fetching leagues and teams:', err)
-        this.error = 'Failed to load competitions'
-      } finally {
-        this.loading = false
-      }
-    },
-    toggleFilter(id: number): void {
-      const index = this.selectedFilters.indexOf(id)
-      if (index > -1) {
-        this.selectedFilters.splice(index, 1)
-      } else {
-        this.selectedFilters.push(id)
-      }
-      this.saveToLocalStorage()
-      this.emitFilterChange()
-    },
-    removeFilter(id: number): void {
-      const index = this.selectedFilters.indexOf(id)
-      if (index > -1) {
-        this.selectedFilters.splice(index, 1)
-        this.saveToLocalStorage()
-        this.emitFilterChange()
-      }
-    },
-    clearAllFilters(): void {
-      this.selectedFilters = []
-      this.saveToLocalStorage()
-      this.emitFilterChange()
-    },
-    isSelected(id: number): boolean {
-      return this.selectedFilters.includes(id)
-    },
-    onAddItem(item: { id: number }): void {
-      if (!this.selectedFilters.includes(item.id)) {
-        this.selectedFilters.push(item.id)
-        this.saveToLocalStorage()
-        this.emitFilterChange()
-      }
-    },
-    toggleFavorite(id: number): void {
-      const index = this.favorites.indexOf(id)
-      if (index > -1) {
-        this.favorites.splice(index, 1)
-      } else {
-        this.favorites.push(id)
-      }
-      this.saveToLocalStorage()
-    },
-    isFavorite(id: number): boolean {
-      return this.favorites.includes(id)
-    },
-    getItemById(id: number): FilterItem | undefined {
-      return this.allItems.find((item) => item.id === id)
-    },
-    emitFilterChange(): void {
-      const leagues = this.selectedFilters.filter((id) =>
-        this.competitions.some((comp) => comp.id === id),
-      )
-      const teams = this.selectedFilters.filter((id) =>
-        this.competitions.some((comp) => comp.clubs.some((club) => club.id === id)),
-      )
-
-      this.$emit('filter-changed', {
-        leagues,
-        teams,
-        all: this.selectedFilters,
-      })
-    },
-    saveToLocalStorage(): void {
-      localStorage.setItem('selectedFilters', JSON.stringify(this.selectedFilters))
-      localStorage.setItem('favoriteCompetitions', JSON.stringify(this.favorites))
-    },
-    loadFromLocalStorage(): void {
-      const savedFilters = localStorage.getItem('selectedFilters')
-      const savedFavorites = localStorage.getItem('favoriteCompetitions')
-
-      if (savedFilters) {
-        this.selectedFilters = JSON.parse(savedFilters)
-      }
-
-      if (savedFavorites) {
-        this.favorites = JSON.parse(savedFavorites)
-      }
-    },
-  },
-}
-</script>
