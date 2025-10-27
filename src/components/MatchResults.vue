@@ -20,7 +20,7 @@
       </div>
       <p class="text-red-400 mb-6 px-4">{{ error }}</p>
       <button
-        @click="() => fetchRecentMatches(1)"
+        @click="fetchRecentMatches(1)"
         class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all duration-300 font-medium"
       >
         Try Again
@@ -45,7 +45,7 @@
         check back later.
       </p>
       <button
-        @click="() => fetchRecentMatches(1)"
+        @click="fetchRecentMatches(1)"
         class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all duration-300 font-medium"
       >
         Refresh
@@ -56,7 +56,7 @@
     <div
       v-for="dateCard in matches"
       :key="dateCard.id"
-      class="date-card relative overflow-hidden rounded-2xl md:rounded-3xl shadow-2xl transition-all duration-500 hover:shadow-3xl"
+      class="date-card"
       :style="{
         backgroundImage: `linear-gradient(135deg, ${dateCard.gradientFrom}, ${dateCard.gradientTo})`,
       }"
@@ -64,47 +64,30 @@
       <div class="date-card-content">
         <!-- Date Header -->
         <div class="date-header">
-          <div class="flex items-start md:items-center gap-3 md:gap-4 flex-1 min-w-0">
-            <div
-              class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center flex-shrink-0"
-            >
-              <svg
-                class="w-5 h-5 md:w-7 md:h-7 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </div>
-            <div class="min-w-0 flex-1">
-              <h2 class="text-white font-bold text-lg md:text-2xl tracking-tight truncate">
-                {{ dateCard.date }}
-              </h2>
-              <p class="text-white/50 text-xs md:text-sm mt-1 truncate">
-                {{ getTotalMatches(dateCard) }} matches across
-                {{ dateCard.leagues.length }} league{{ dateCard.leagues.length > 1 ? 's' : '' }}
-              </p>
-            </div>
+          <div class="date-header-icon">
+            <svg class="icon-calendar" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <div class="date-header-info">
+            <h2 class="date-title">{{ dateCard.date }}</h2>
+            <p class="date-subtitle">
+              {{ getTotalMatches(dateCard) }} matches across {{ dateCard.leagues.length }} league{{
+                dateCard.leagues.length > 1 ? 's' : ''
+              }}
+            </p>
           </div>
           <button
             @click="handleFavorite(dateCard.id)"
-            class="w-9 h-9 md:w-11 md:h-11 rounded-lg md:rounded-xl bg-white/5 hover:bg-white/15 flex items-center justify-center transition-all duration-300 group flex-shrink-0"
+            class="favorite-button"
+            :class="{ 'is-favorite': dateCard.isFavorite }"
           >
-            <svg
-              class="w-4 h-4 md:w-5 md:h-5 transition-all duration-300"
-              :class="
-                dateCard.isFavorite ? 'text-yellow-400' : 'text-white/40 group-hover:text-white/70'
-              "
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg class="favorite-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -129,20 +112,16 @@
           >
             <!-- League Header -->
             <div class="league-header">
-              <div
-                class="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-white/95 flex items-center justify-center overflow-hidden shadow-lg flex-shrink-0"
-              >
+              <div class="league-logo-wrapper">
                 <img
                   :src="leagueSection.league.logo"
                   :alt="leagueSection.league.name"
-                  class="w-6 h-6 md:w-7 md:h-7 object-contain"
+                  class="league-logo"
                 />
               </div>
-              <div class="flex-1 min-w-0">
-                <h3 class="text-white font-bold text-base md:text-lg truncate">
-                  {{ leagueSection.league.name }}
-                </h3>
-                <p class="text-white/50 text-xs md:text-sm truncate">
+              <div class="league-info">
+                <h3 class="league-name">{{ leagueSection.league.name }}</h3>
+                <p class="league-meta">
                   {{ leagueSection.league.country }} • {{ leagueSection.games.length }} match{{
                     leagueSection.games.length > 1 ? 'es' : ''
                   }}
@@ -155,76 +134,37 @@
               <div
                 v-for="(game, gameIndex) in leagueSection.games"
                 :key="game.id || gameIndex"
-                class="game-row group relative rounded-xl md:rounded-2xl transition-all duration-300 cursor-pointer overflow-hidden"
+                class="game-row"
                 @click="handleMatchClick(game.id)"
               >
-                <!-- Hover Background -->
-                <div
-                  class="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300 rounded-xl md:rounded-2xl"
-                ></div>
+                <div class="game-row-bg"></div>
 
-                <!-- Content -->
-                <div class="relative flex items-center gap-2 md:gap-0">
+                <div class="game-content">
                   <!-- Home Team -->
-                  <div class="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
-                    <div
-                      class="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-white/95 flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300"
-                    >
-                      <img
-                        :src="game.homeTeam.logo"
-                        :alt="game.homeTeam.name"
-                        class="w-5 h-5 md:w-7 md:h-7 object-contain"
-                      />
+                  <div class="team-section team-home">
+                    <div class="team-logo-wrapper">
+                      <img :src="game.homeTeam.logo" :alt="game.homeTeam.name" class="team-logo" />
                     </div>
-                    <span
-                      class="text-white font-semibold truncate text-sm md:text-base group-hover:translate-x-1 transition-transform duration-300"
-                    >
-                      {{ game.homeTeam.name }}
-                    </span>
+                    <span class="team-name">{{ game.homeTeam.name }}</span>
                   </div>
 
                   <!-- Score -->
-                  <div
-                    class="flex items-center justify-center gap-2 md:gap-5 flex-shrink-0 px-2 md:px-8"
-                  >
-                    <span
-                      class="text-white font-bold text-lg md:text-2xl min-w-[1.5rem] md:min-w-[2rem] text-center tabular-nums"
-                    >
-                      {{ game.homeTeam.score }}
-                    </span>
-                    <span class="text-white/30 font-bold text-sm md:text-lg">—</span>
-                    <span
-                      class="text-white font-bold text-lg md:text-2xl min-w-[1.5rem] md:min-w-[2rem] text-center tabular-nums"
-                    >
-                      {{ game.awayTeam.score }}
-                    </span>
+                  <div class="score-section">
+                    <span class="score">{{ game.homeTeam.score }}</span>
+                    <span class="score-separator">—</span>
+                    <span class="score">{{ game.awayTeam.score }}</span>
                   </div>
 
                   <!-- Away Team -->
-                  <div class="flex items-center gap-2 md:gap-4 flex-1 min-w-0 justify-end">
-                    <span
-                      class="text-white font-semibold truncate text-sm md:text-base text-right group-hover:-translate-x-1 transition-transform duration-300"
-                    >
-                      {{ game.awayTeam.name }}
-                    </span>
-                    <div
-                      class="w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-white/95 flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300"
-                    >
-                      <img
-                        :src="game.awayTeam.logo"
-                        :alt="game.awayTeam.name"
-                        class="w-5 h-5 md:w-7 md:h-7 object-contain"
-                      />
+                  <div class="team-section team-away">
+                    <span class="team-name">{{ game.awayTeam.name }}</span>
+                    <div class="team-logo-wrapper">
+                      <img :src="game.awayTeam.logo" :alt="game.awayTeam.name" class="team-logo" />
                     </div>
                   </div>
 
                   <!-- Arrow Icon -->
-                  <svg
-                    class="w-4 h-4 md:w-5 md:h-5 text-white/0 group-hover:text-white/60 ml-2 md:ml-6 flex-shrink-0 transition-all duration-300 group-hover:translate-x-1 hidden sm:block"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg class="arrow-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -242,18 +182,10 @@
 
     <!-- Load More Button -->
     <div v-if="matches.length > 0 && !loading" class="load-more-container">
-      <button
-        @click="loadMore"
-        class="group px-6 md:px-8 py-3 md:py-4 bg-white/10 hover:bg-white/20 rounded-xl md:rounded-2xl text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
-      >
-        <span class="flex items-center justify-center gap-3">
+      <button @click="loadMore" class="load-more-button">
+        <span class="load-more-content">
           Load More Matches
-          <svg
-            class="w-4 h-4 md:w-5 md:h-5 group-hover:translate-y-1 transition-transform duration-300"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg class="load-more-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -268,10 +200,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
+import { useFilterStore } from '@/stores/useFilterStore'
 
 interface Team {
+  id?: number
   name: string
   logo: string
   score: number
@@ -309,6 +243,7 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const currentPage = ref(1)
 
+const store = useFilterStore()
 const emit = defineEmits<{
   matchClick: [matchId: string]
   favoriteToggle: [dateId: string]
@@ -319,9 +254,7 @@ const getTotalMatches = (dateCard: DateCard): number => {
 }
 
 const handleMatchClick = (gameId: string): void => {
-  if (gameId) {
-    emit('matchClick', gameId)
-  }
+  if (gameId) emit('matchClick', gameId)
 }
 
 const handleFavorite = (dateId: string): void => {
@@ -332,38 +265,49 @@ const handleFavorite = (dateId: string): void => {
   }
 }
 
-const fetchRecentMatches = async (page: number = 1): Promise<void> => {
-  console.log('Starting to fetch matches... Page:', page)
+const fetchRecentMatches = async (page: number = 1) => {
   loading.value = true
   error.value = null
 
+  console.log('🔄 Fetching matches - Page:', page)
+  console.log('Active competition IDs from store:', store.activeCompetitionIds)
+  console.log('Active club IDs from store:', store.activeClubIds)
+
   try {
-    const response = await axios.get('http://localhost:8080/api/matches/recent', {
-      params: {
-        season: 2022,
-        limit: 30,
-        page: page,
-      },
-    })
-
-    console.log('API Response received:', response.data)
-
-    if (page === 1) {
-      matches.value = response.data
-    } else {
-      matches.value = [...matches.value, ...response.data]
+    const params: {
+      season: number
+      limit: number
+      page: number
+      leagues?: string
+      clubs?: string
+    } = {
+      season: 2023,
+      limit: 30,
+      page,
     }
 
+    if (store.activeCompetitionIds.length > 0) {
+      params.leagues = store.activeCompetitionIds.join(',')
+      console.log('🏆 Sending leagues param:', params.leagues)
+    }
+
+    if (store.activeClubIds.length > 0) {
+      params.clubs = store.activeClubIds.join(',')
+      console.log('Sending clubs param:', params.clubs)
+    }
+
+    console.log('Final request params:', params)
+
+    const response = await axios.get('http://localhost:8080/api/matches/recent', { params })
+    const data = response.data as DateCard[]
+
+    console.log('✅ Received', data.length, 'date cards')
+
+    matches.value = page === 1 ? data : [...matches.value, ...data]
     currentPage.value = page
   } catch (err) {
-    console.error('Error fetching recent matches:', err)
-    if (axios.isAxiosError(err)) {
-      error.value = err.response?.data?.error || 'Failed to load matches. Please try again.'
-      console.error('Response data:', err.response?.data)
-      console.error('Response status:', err.response?.status)
-    } else {
-      error.value = 'An unexpected error occurred'
-    }
+    console.error('❌ Error fetching matches:', err)
+    error.value = 'Failed to load matches. Please try again.'
   } finally {
     loading.value = false
   }
@@ -374,139 +318,611 @@ const loadMore = (): void => {
 }
 
 onMounted(() => {
+  console.log('MatchResults mounted')
   fetchRecentMatches(1)
 })
+
+watch(
+  () => [store.activeCompetitionIds, store.activeClubIds],
+  (newVal, oldVal) => {
+    console.log('🔔 Filters changed!', {
+      old: oldVal,
+      new: newVal,
+    })
+    currentPage.value = 1
+    fetchRecentMatches(1)
+  },
+  { deep: true },
+)
 </script>
 
 <style scoped>
+/* Container */
 .match-results-container {
-  padding: 0 16px;
+  padding: 0 1rem;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 1.5rem;
+  max-width: 100%;
 }
 
 @media (min-width: 768px) {
   .match-results-container {
     padding: 0;
-    gap: 40px;
+    gap: 2rem;
   }
 }
 
+/* Date Card */
 .date-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
   backdrop-filter: blur(20px);
-  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .date-card {
+    border-radius: 1.5rem;
+  }
+}
+
+.date-card:hover {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
 }
 
 .date-card-content {
-  padding: 24px 20px;
+  padding: 1.5rem;
 }
 
 @media (min-width: 768px) {
   .date-card-content {
-    padding: 40px 32px;
+    padding: 2rem;
   }
 }
 
+/* Date Header */
 .date-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  padding-bottom: 24px;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  gap: 16px;
 }
 
 @media (min-width: 768px) {
   .date-header {
-    align-items: center;
-    margin-bottom: 32px;
-    padding-bottom: 32px;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
   }
 }
 
+.date-header-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .date-header-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1rem;
+  }
+}
+
+.icon-calendar {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: white;
+}
+
+@media (min-width: 768px) {
+  .icon-calendar {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
+
+.date-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.date-title {
+  color: white;
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  margin: 0 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 768px) {
+  .date-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.375rem;
+  }
+}
+
+.date-subtitle {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 768px) {
+  .date-subtitle {
+    font-size: 0.875rem;
+  }
+}
+
+.favorite-button {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .favorite-button {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.75rem;
+  }
+}
+
+.favorite-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.favorite-icon {
+  width: 1rem;
+  height: 1rem;
+  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+@media (min-width: 768px) {
+  .favorite-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+.favorite-button:hover .favorite-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.favorite-button.is-favorite .favorite-icon {
+  color: #fbbf24;
+}
+
+/* League Sections */
 .league-sections {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 2rem;
 }
 
 @media (min-width: 768px) {
   .league-sections {
-    gap: 48px;
+    gap: 2.5rem;
   }
 }
 
 .league-section:not(:last-child) {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 32px;
-  margin-bottom: 0;
+  padding-bottom: 2rem;
 }
 
 @media (min-width: 768px) {
   .league-section:not(:last-child) {
-    padding-bottom: 48px;
+    padding-bottom: 2.5rem;
   }
 }
 
+/* League Header */
 .league-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 @media (min-width: 768px) {
   .league-header {
-    gap: 20px;
-    margin-bottom: 24px;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
   }
 }
 
+.league-logo-wrapper {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .league-logo-wrapper {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+  }
+}
+
+.league-logo {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .league-logo {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
+
+.league-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.league-name {
+  color: white;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  margin: 0 0 0.125rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 768px) {
+  .league-name {
+    font-size: 1.125rem;
+    margin-bottom: 0.25rem;
+  }
+}
+
+.league-meta {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 768px) {
+  .league-meta {
+    font-size: 0.875rem;
+  }
+}
+
+/* Games List */
 .games-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.625rem;
 }
 
 @media (min-width: 768px) {
   .games-list {
-    gap: 16px;
+    gap: 0.75rem;
   }
 }
 
 .game-row {
+  position: relative;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 1rem 0.75rem;
   border: 1px solid transparent;
-  padding: 16px 12px;
-  min-height: 70px;
 }
 
 @media (min-width: 768px) {
   .game-row {
-    padding: 20px 24px;
-    min-height: 80px;
+    border-radius: 1rem;
+    padding: 1.25rem 1rem;
   }
+}
+
+.game-row-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0);
+  transition: all 0.3s ease;
+  border-radius: inherit;
+}
+
+.game-row:hover .game-row-bg {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .game-row:hover {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+.game-content {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .game-content {
+    gap: 1rem;
+  }
+}
+
+/* Team Section */
+.team-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .team-section {
+    gap: 0.75rem;
+  }
+}
+
+.team-home {
+  justify-content: flex-start;
+}
+
+.team-away {
+  justify-content: flex-end;
+}
+
+.team-logo-wrapper {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .team-logo-wrapper {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+  }
+}
+
+.game-row:hover .team-logo-wrapper {
+  transform: scale(1.1);
+}
+
+.team-logo {
+  width: 1.25rem;
+  height: 1.25rem;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .team-logo {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
+
+.team-name {
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: transform 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .team-name {
+    font-size: 1rem;
+  }
+}
+
+.team-home .team-name {
+  order: 1;
+}
+
+.game-row:hover .team-home .team-name {
+  transform: translateX(0.25rem);
+}
+
+.game-row:hover .team-away .team-name {
+  transform: translateX(-0.25rem);
+}
+
+/* Score Section */
+.score-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .score-section {
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+}
+
+.score {
+  color: white;
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1;
+  min-width: 1.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .score {
+    font-size: 1.5rem;
+    min-width: 2rem;
+  }
+}
+
+.score-separator {
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+@media (min-width: 768px) {
+  .score-separator {
+    font-size: 1.125rem;
+  }
+}
+
+/* Arrow Icon */
+.arrow-icon {
+  width: 1rem;
+  height: 1rem;
+  color: rgba(255, 255, 255, 0);
+  transition: all 0.3s ease;
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .arrow-icon {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  .arrow-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+.game-row:hover .arrow-icon {
+  color: rgba(255, 255, 255, 0.6);
+  transform: translateX(0.25rem);
+}
+
+/* Load More */
 .load-more-container {
   text-align: center;
-  padding: 32px 0;
+  padding: 1.5rem 0;
 }
 
 @media (min-width: 768px) {
   .load-more-container {
-    padding: 40px 0;
+    padding: 2rem 0;
   }
 }
 
-/* Custom scrollbar */
+.load-more-button {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+  .load-more-button {
+    padding: 1rem 2rem;
+    border-radius: 1rem;
+    font-size: 1rem;
+  }
+}
+
+.load-more-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.load-more-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.load-more-icon {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .load-more-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+.load-more-button:hover .load-more-icon {
+  transform: translateY(0.25rem);
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
