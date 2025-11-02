@@ -220,42 +220,6 @@
         </div>
       </div>
 
-      <!-- Clean Sheets List -->
-      <div
-        v-else-if="selectedTab === 'cleansheets' && cleanSheets.length > 0"
-        class="stats-content"
-      >
-        <div class="stats-list">
-          <div
-            v-for="(keeper, index) in cleanSheets"
-            :key="keeper.id"
-            class="stat-item"
-            @click="handlePlayerClick(keeper.id)"
-          >
-            <div class="rank-badge">{{ index + 1 }}</div>
-            <div class="player-avatar">
-              <img :src="keeper.image" :alt="keeper.name" @error="handleImageError" />
-            </div>
-            <div class="player-info">
-              <h4 class="player-name">{{ keeper.name }}</h4>
-              <div class="team-info">
-                <img
-                  :src="keeper.team.logo"
-                  :alt="keeper.team.name"
-                  class="team-logo"
-                  @error="handleImageError"
-                />
-                <span class="team-name">{{ keeper.team.name }}</span>
-              </div>
-            </div>
-            <div class="stat-value">
-              <div class="stat-number">{{ keeper.cleanSheets }}</div>
-              <div class="stat-label">clean sheets</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Empty State -->
       <div v-else class="empty-state">
         <div class="empty-icon">
@@ -282,20 +246,12 @@ import { useStatisticsStore } from '@/stores/statisticsStore'
 import { storeToRefs } from 'pinia'
 
 const statisticsStore = useStatisticsStore()
-const {
-  topScorers,
-  topAssists,
-  cleanSheets,
-  news,
-  featuredNews,
-  availableLeagues,
-  loading,
-  error,
-} = storeToRefs(statisticsStore)
+const { topScorers, topAssists, news, featuredNews, availableLeagues, loading, error } =
+  storeToRefs(statisticsStore)
 
 const selectedLeagueId = ref(39)
 const selectedSeason = ref('2023')
-const selectedTab = ref<'scorers' | 'assists' | 'cleansheets'>('scorers')
+const selectedTab = ref<'scorers' | 'assists'>('scorers')
 
 const emit = defineEmits<{
   newsClick: [newsId: string]
@@ -334,6 +290,14 @@ const formatDate = (dateString: string) => {
 }
 
 const handleNewsClick = (newsId: string) => {
+  // Find the news item
+  const newsItem = news.value.find((n) => n.id === newsId) || featuredNews.value
+
+  if (newsItem && newsItem.url) {
+    // Open the real news URL in a new tab
+    window.open(newsItem.url, '_blank')
+  }
+
   emit('newsClick', newsId)
 }
 
@@ -581,7 +545,7 @@ onMounted(() => {
 
 .stats-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 

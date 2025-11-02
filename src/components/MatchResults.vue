@@ -3,7 +3,9 @@
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-12">
       <div class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
-      <p class="text-white/60 mt-4 text-sm">Loading matches...</p>
+      <p class="text-white/60 mt-4 text-sm">
+        {{ isSearching ? 'Searching matches...' : 'Loading matches...' }}
+      </p>
     </div>
 
     <!-- Error State -->
@@ -39,16 +41,21 @@
           />
         </svg>
       </div>
-      <h3 class="text-white text-xl font-bold mb-2">No Matches Found</h3>
+      <h3 class="text-white text-xl font-bold mb-2">
+        {{ isSearching ? 'No Matches Found' : 'No Matches Available' }}
+      </h3>
       <p class="text-white/60 mb-6 px-4 max-w-md mx-auto">
-        There are no matches available for the selected criteria. Try adjusting your filters or
-        check back later.
+        {{
+          isSearching
+            ? `No matches found for "${currentSearchQuery}". Try a different club name.`
+            : 'There are no matches available for the selected criteria. Try adjusting your filters or check back later.'
+        }}
       </p>
       <button
-        @click="fetchRecentMatches(1)"
+        @click="isSearching ? clearSearch() : fetchRecentMatches(1)"
         class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all duration-300 font-medium"
       >
-        Refresh
+        {{ isSearching ? 'Clear Search' : 'Refresh' }}
       </button>
     </div>
 
@@ -77,7 +84,10 @@
           <div class="date-header-info">
             <h2 class="date-title">{{ dateCard.date }}</h2>
             <p class="date-subtitle">
-              {{ getTotalMatches(dateCard) }} matches across {{ dateCard.leagues.length }} league{{
+              {{ getTotalMatches(dateCard) }} match{{
+                getTotalMatches(dateCard) !== 1 ? 'es' : ''
+              }}
+              across {{ dateCard.leagues.length }} league{{
                 dateCard.leagues.length > 1 ? 's' : ''
               }}
             </p>
@@ -181,7 +191,7 @@
     </div>
 
     <!-- Load More Button -->
-    <div v-if="matches.length > 0 && !loading" class="load-more-container">
+    <div v-if="matches.length > 0 && !loading && !isSearching" class="load-more-container">
       <button @click="loadMore" class="load-more-button">
         <span class="load-more-content">
           Load More Matches
@@ -242,6 +252,8 @@ const matches = ref<DateCard[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const currentPage = ref(1)
+const isSearching = ref(false)
+const currentSearchQuery = ref('')
 
 const store = useFilterStore()
 const emit = defineEmits<{
@@ -268,10 +280,10 @@ const handleFavorite = (dateId: string): void => {
 const fetchRecentMatches = async (page: number = 1) => {
   loading.value = true
   error.value = null
+  isSearching.value = false
+  currentSearchQuery.value = ''
 
-  console.log('🔄 Fetching matches - Page:', page)
-  console.log('Active competition IDs from store:', store.activeCompetitionIds)
-  console.log('Active club IDs from store:', store.activeClubIds)
+  console.log('Fetching matches - Page:', page)
 
   try {
     const params: {
@@ -279,43 +291,89 @@ const fetchRecentMatches = async (page: number = 1) => {
       limit: number
       page: number
       leagues?: string
-      clubs?: string
     } = {
       season: 2023,
       limit: 30,
       page,
     }
 
-    if (store.activeCompetitionIds.length > 0) {
+    if (store.activeCompetitionIds?.length > 0) {
       params.leagues = store.activeCompetitionIds.join(',')
-      console.log('🏆 Sending leagues param:', params.leagues)
     }
-
-    if (store.activeClubIds.length > 0) {
-      params.clubs = store.activeClubIds.join(',')
-      console.log('Sending clubs param:', params.clubs)
-    }
-
-    console.log('Final request params:', params)
 
     const response = await axios.get('http://localhost:8080/api/matches/recent', { params })
     const data = response.data as DateCard[]
 
-    console.log('✅ Received', data.length, 'date cards')
-
     matches.value = page === 1 ? data : [...matches.value, ...data]
     currentPage.value = page
   } catch (err) {
-    console.error('❌ Error fetching matches:', err)
+    console.error('Error fetching matches:', err)
     error.value = 'Failed to load matches. Please try again.'
   } finally {
     loading.value = false
   }
 }
 
+const searchMatches = async (query: string, page: number = 1) => {
+  if (!query.trim()) {
+    fetchRecentMatches(1)
+    return
+  }
+
+  loading.value = true
+  error.value = null
+  isSearching.value = true
+  currentSearchQuery.value = query
+
+  console.log('Searching matches for:', query)
+
+  try {
+    const params: {
+      query: string
+      season: number
+      limit: number
+      page: number
+      leagues?: string
+    } = {
+      query: query.trim(),
+      season: 2023,
+      limit: 20,
+      page,
+    }
+
+    if (store.activeCompetitionIds?.length > 0) {
+      params.leagues = store.activeCompetitionIds.join(',')
+    }
+
+    const response = await axios.get('http://localhost:8080/api/matches/search', { params })
+    const data = response.data as DateCard[]
+
+    matches.value = data
+    currentPage.value = page
+    console.log('Search results:', data.length, 'date cards')
+  } catch (err) {
+    console.error('Error searching matches:', err)
+    error.value = 'Failed to search matches. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
+
+const clearSearch = () => {
+  isSearching.value = false
+  currentSearchQuery.value = ''
+  fetchRecentMatches(1)
+}
+
 const loadMore = (): void => {
   fetchRecentMatches(currentPage.value + 1)
 }
+
+defineExpose({
+  fetchRecentMatches,
+  searchMatches,
+  clearSearch,
+})
 
 onMounted(() => {
   console.log('MatchResults mounted')
@@ -323,18 +381,22 @@ onMounted(() => {
 })
 
 watch(
-  () => [store.activeCompetitionIds, store.activeClubIds],
-  (newVal, oldVal) => {
-    console.log('🔔 Filters changed!', {
-      old: oldVal,
-      new: newVal,
-    })
-    currentPage.value = 1
-    fetchRecentMatches(1)
+  () => store.activeCompetitionIds,
+  () => {
+    console.log('Filters changed')
+    if (isSearching.value && currentSearchQuery.value) {
+      searchMatches(currentSearchQuery.value, 1)
+    } else {
+      fetchRecentMatches(1)
+    }
   },
   { deep: true },
 )
 </script>
+
+<style scoped>
+/* Keep all your existing styles from the original component */
+</style>
 
 <style scoped>
 /* Container */

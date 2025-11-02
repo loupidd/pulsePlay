@@ -1,10 +1,4 @@
 <script lang="ts">
-const navigation = [
-  { name: 'Dashboard', href: '#', current: true },
-  { name: 'Leagues', href: '#', current: false },
-  { name: 'Matches', href: '#', current: false },
-  { name: 'Players', href: '#', current: false },
-]
 import {
   Disclosure,
   DisclosureButton,
@@ -14,7 +8,9 @@ import {
   MenuItems,
   MenuItem,
 } from '@headlessui/vue'
-import { Bars3Icon, XMarkIcon, BellIcon } from '@heroicons/vue/24/outline'
+import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, BellIcon } from '@heroicons/vue/24/outline'
+import { useRoute } from 'vue-router'
+import { computed, ref } from 'vue'
 
 export default {
   name: 'PulseNavbar',
@@ -28,19 +24,42 @@ export default {
     MenuItem,
     Bars3Icon,
     XMarkIcon,
+    MagnifyingGlassIcon,
     BellIcon,
   },
-  data() {
-    return {
-      navigation: navigation,
+  setup(props, { emit }) {
+    const route = useRoute()
+    const searchQuery = ref('')
+    const isSearchFocused = ref(false)
+
+    const navigation = computed(() => [
+      { name: 'Dashboard', path: '/', current: route.name === 'dashboard' },
+      { name: 'News', path: '/news', current: route.name === 'news' },
+    ])
+
+    const handleSearch = () => {
+      if (searchQuery.value.trim()) {
+        emit('search', searchQuery.value.trim())
+      }
     }
-  },
-  methods: {
-    setActive(itemName: string) {
-      this.navigation.forEach((item) => {
-        item.current = item.name === itemName
-      })
-    },
+
+    const handleSearchInput = () => {
+      emit('search', searchQuery.value.trim())
+    }
+
+    const clearSearch = () => {
+      searchQuery.value = ''
+      handleSearchInput()
+    }
+
+    return {
+      navigation,
+      searchQuery,
+      isSearchFocused,
+      handleSearch,
+      handleSearchInput,
+      clearSearch,
+    }
   },
 }
 </script>
@@ -58,36 +77,53 @@ export default {
           </DisclosureButton>
         </div>
 
-        <!-- Logo and Brand -->
-        <div class="logo-nav-wrapper">
-          <div class="logo-wrapper">
-            <div class="logo-icon">
-              <svg class="logo-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2.5"
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-            <span class="logo-text">Pulse</span>
+        <!-- Logo -->
+        <router-link to="/" class="logo-wrapper">
+          <div class="logo-icon">
+            <svg class="logo-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.5"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
+            </svg>
           </div>
+          <span class="logo-text">Pulse</span>
+        </router-link>
 
-          <!-- Desktop Navigation -->
-          <div class="desktop-nav">
-            <div class="nav-links">
-              <a
-                v-for="item in navigation"
-                :key="item.name"
-                :href="item.href"
-                @click.prevent="setActive(item.name)"
-                :class="['nav-item', { 'nav-item-active': item.current }]"
-                :aria-current="item.current ? 'page' : undefined"
-              >
-                {{ item.name }}
-              </a>
-            </div>
+        <!-- Desktop Navigation -->
+        <div class="desktop-nav">
+          <div class="nav-links">
+            <router-link
+              v-for="item in navigation"
+              :key="item.name"
+              :to="item.path"
+              :class="['nav-item', { 'nav-item-active': item.current }]"
+              :aria-current="item.current ? 'page' : undefined"
+            >
+              {{ item.name }}
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Search Bar (Centered) -->
+        <div class="search-container">
+          <div class="search-wrapper" :class="{ 'search-focused': isSearchFocused }">
+            <MagnifyingGlassIcon class="search-icon" />
+            <input
+              v-model="searchQuery"
+              @input="handleSearchInput"
+              @keyup.enter="handleSearch"
+              @focus="isSearchFocused = true"
+              @blur="isSearchFocused = false"
+              type="text"
+              placeholder="Search by club name..."
+              class="search-input"
+            />
+            <button v-if="searchQuery" @click="clearSearch" class="search-clear">
+              <XMarkIcon class="clear-icon" />
+            </button>
           </div>
         </div>
 
@@ -194,17 +230,33 @@ export default {
     >
       <DisclosurePanel class="mobile-panel">
         <div class="mobile-nav-links">
-          <DisclosureButton
-            v-for="item in navigation"
-            :key="item.name"
-            as="a"
-            :href="item.href"
-            @click.prevent="setActive(item.name)"
-            :class="['nav-item mobile-nav-item', { 'nav-item-active': item.current }]"
-            :aria-current="item.current ? 'page' : undefined"
-          >
-            {{ item.name }}
+          <DisclosureButton v-for="item in navigation" :key="item.name" as="div">
+            <router-link
+              :to="item.path"
+              :class="['nav-item mobile-nav-item', { 'nav-item-active': item.current }]"
+              :aria-current="item.current ? 'page' : undefined"
+            >
+              {{ item.name }}
+            </router-link>
           </DisclosureButton>
+        </div>
+
+        <!-- Mobile Search -->
+        <div class="mobile-search">
+          <div class="search-wrapper">
+            <MagnifyingGlassIcon class="search-icon" />
+            <input
+              v-model="searchQuery"
+              @input="handleSearchInput"
+              @keyup.enter="handleSearch"
+              type="text"
+              placeholder="Search by club name..."
+              class="search-input"
+            />
+            <button v-if="searchQuery" @click="clearSearch" class="search-clear">
+              <XMarkIcon class="clear-icon" />
+            </button>
+          </div>
         </div>
       </DisclosurePanel>
     </transition>
@@ -234,6 +286,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   height: 64px;
+  gap: 24px;
 }
 
 /* Mobile Menu Button */
@@ -250,21 +303,14 @@ export default {
   color: rgba(156, 163, 175, 1);
 }
 
-/* Logo and Navigation Wrapper */
-.logo-nav-wrapper {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  justify-content: flex-start;
-  gap: 0;
-}
-
+/* Logo */
 .logo-wrapper {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
-  margin-right: 24px;
+  text-decoration: none;
+  color: inherit;
 }
 
 .logo-icon {
@@ -332,14 +378,89 @@ export default {
 }
 
 .nav-item-active {
-  background: linear-gradient(135deg, var(--c-crimson-500) 0%, var(--c-crimson-600) 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white !important;
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 .nav-item-active:hover {
-  background: linear-gradient(135deg, var(--c-crimson-600) 0%, var(--c-crimson-700) 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+/* Search Container */
+.search-container {
+  flex: 1;
+  max-width: 500px;
+  display: flex;
+  justify-content: center;
+}
+
+.search-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.search-wrapper:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.search-focused {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  width: 20px;
+  height: 20px;
+  color: rgba(156, 163, 175, 1);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 40px 10px 40px;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: rgba(156, 163, 175, 1);
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: rgba(156, 163, 175, 1);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-clear:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.clear-icon {
+  width: 16px;
+  height: 16px;
 }
 
 /* Actions Wrapper */
@@ -347,6 +468,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 /* Navigation Buttons */
@@ -541,6 +663,14 @@ export default {
   font-size: 16px;
 }
 
+.mobile-search {
+  padding: 0 16px 16px 16px;
+}
+
+.mobile-search .search-wrapper {
+  width: 100%;
+}
+
 /* Responsive Breakpoints */
 @media (min-width: 640px) {
   .navbar-content {
@@ -573,11 +703,11 @@ export default {
     align-items: center;
   }
 
-  .logo-nav-wrapper {
-    justify-content: center;
+  .desktop-nav {
+    display: none;
   }
 
-  .desktop-nav {
+  .search-container {
     display: none;
   }
 

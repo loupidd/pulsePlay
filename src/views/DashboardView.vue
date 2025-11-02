@@ -1,14 +1,14 @@
 <script lang="ts">
 import AppBanner from '../components/AppBanner.vue'
-import ClubCompetitions from '../components/ClubCompetitions.vue'
 import NewsStatistics from '..//components/NewsStatistics.vue'
 import MatchView from './MatchView.vue'
+import CompetitionsFilter from '../components/CompetitionsFilter.vue'
 
 export default {
   name: 'DashboardView',
   components: {
     AppBanner,
-    ClubCompetitions,
+    CompetitionsFilter,
     MatchView,
     NewsStatistics,
   },
@@ -17,7 +17,7 @@ export default {
 
 <template>
   <div class="flex gap-4 p-4 min-h-screen">
-    <ClubCompetitions
+    <CompetitionsFilter
       id="sidebar"
       class="self-start w-48 top-4 flex-shrink-0 sticky rounded-2xl p-4 h-[calc(100vh-2rem)] shadow-lg"
     />

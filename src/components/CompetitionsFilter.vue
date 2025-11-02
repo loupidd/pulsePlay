@@ -4,7 +4,7 @@
   >
     <!-- Header -->
     <div class="flex items-center justify-between px-1">
-      <h2 class="text-base sm:text-lg font-semibold text-white">Clubs & Competitions</h2>
+      <h2 class="text-base sm:text-lg font-semibold text-white">Competitions Filter</h2>
       <button
         v-if="store.selectedFilters.length > 0"
         @click="clearAllFilters"
@@ -69,45 +69,6 @@
       </div>
 
       <div class="flex flex-col gap-6 sm:gap-8">
-        <!-- Favorite Competitions Section -->
-        <div v-if="favoriteCompetitions.length > 0">
-          <div class="flex items-center gap-2 mb-3 sm:mb-4 px-1">
-            <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-              <path
-                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-              />
-            </svg>
-            <span class="text-sm font-medium text-white/80">Favorites</span>
-          </div>
-          <div class="space-y-2 sm:space-y-3">
-            <div
-              v-for="comp in favoriteCompetitions"
-              :key="'fav-' + comp.id"
-              @click="toggleFilter(comp.id)"
-              class="filter-item flex items-center gap-2.5 sm:gap-3 px-3 py-3 sm:py-3.5 rounded-xl cursor-pointer transition-all touch-manipulation"
-              :class="{ 'filter-active': isSelected(comp.id) }"
-            >
-              <div
-                class="bg-white rounded-full w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0"
-                :style="{
-                  backgroundImage: `url(${comp.image})`,
-                  backgroundSize: 'contain',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                }"
-              ></div>
-              <span class="text-sm font-medium truncate flex-1">{{ comp.name }}</span>
-              <button @click.stop="toggleFavorite(comp.id)" class="favorite-btn flex-shrink-0">
-                <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path
-                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
         <!-- Only show competitions that are selected -->
         <div v-for="competition in selectedCompetitions" :key="competition.id">
           <!-- Competition -->
@@ -127,47 +88,6 @@
                 }"
               ></div>
               <span class="text-sm font-medium truncate">{{ competition.name }}</span>
-            </div>
-            <button
-              @click="toggleFavorite(competition.id)"
-              class="favorite-btn flex-shrink-0"
-              :class="{ 'favorite-active': isFavorite(competition.id) }"
-            >
-              <svg
-                class="w-4 h-4 sm:w-5 sm:h-5"
-                :fill="isFavorite(competition.id) ? 'currentColor' : 'none'"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <!-- Clubs -->
-          <div class="ml-6 sm:ml-8 mt-3 sm:mt-4 space-y-2 sm:space-y-3 pl-0">
-            <div
-              v-for="club in competition.clubs"
-              :key="club.id"
-              @click="toggleFilter(club.id)"
-              class="filter-item flex items-center gap-2 sm:gap-2.5 px-3 py-2.5 sm:py-3 rounded-lg cursor-pointer transition-all touch-manipulation"
-              :class="{ 'filter-active': isSelected(club.id) }"
-            >
-              <div
-                class="rounded-full w-6 h-6 bg-white flex-shrink-0"
-                :style="{
-                  backgroundImage: `url(${club.image})`,
-                  backgroundSize: '70%',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                }"
-              ></div>
-              <span class="text-xs sm:text-sm font-medium truncate">{{ club.name }}</span>
             </div>
           </div>
         </div>
@@ -209,13 +129,6 @@ interface Competition {
   name: string
   image: string
   country: string
-  clubs: Club[]
-}
-interface Club {
-  id: number
-  name: string
-  image: string
-  country: string
 }
 
 export default defineComponent({
@@ -238,23 +151,12 @@ export default defineComponent({
         image: comp.image,
         type: 'competition' as const,
       }))
-      const clubs = this.store.competitions.flatMap((comp) =>
-        comp.clubs.map((club) => ({
-          id: club.id,
-          name: club.name,
-          image: club.image,
-          type: 'club' as const,
-        })),
-      )
-      return [...competitions, ...clubs]
+      return competitions
     },
     availableItems(): FilterItem[] {
       return this.allItems.filter(
         (item) => !this.store.selectedFilters.some((f) => f.id === item.id),
       )
-    },
-    favoriteCompetitions(): Competition[] {
-      return this.store.competitions.filter((comp) => this.store.favorites.includes(comp.id))
     },
     // Only show competitions that have been selected as filters
     selectedCompetitions(): Competition[] {
@@ -262,9 +164,6 @@ export default defineComponent({
         this.store.selectedFilters.some((f) => f.id === comp.id && f.type === 'competition'),
       )
     },
-  },
-  mounted() {
-    this.store.loadFavoritesFromStorage()
   },
   methods: {
     toggleFilter(id: number) {
@@ -286,8 +185,8 @@ export default defineComponent({
       return this.store.selectedFilters.some((f) => f.id === id)
     },
     onAddItem(item: { id: number; name: string; image?: string; type: string }) {
-      // Only add if image exists and type is valid
-      if (item.image && (item.type === 'club' || item.type === 'competition')) {
+      // Only add if image exists and type is competition
+      if (item.image && item.type === 'competition') {
         this.store.addFilter({
           id: item.id,
           name: item.name,
@@ -295,12 +194,6 @@ export default defineComponent({
           type: item.type,
         })
       }
-    },
-    toggleFavorite(id: number) {
-      this.store.toggleFavorite(id)
-    },
-    isFavorite(id: number) {
-      return this.store.favorites.includes(id)
     },
     getItemById(id: number) {
       return this.allItems.find((item) => item.id === id)
@@ -370,22 +263,6 @@ export default defineComponent({
 
 .chip-remove:hover {
   background: rgba(255, 255, 255, 0.1);
-}
-
-.favorite-btn {
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  transition: all 0.2s;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.favorite-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(251, 191, 36, 0.8);
-}
-
-.favorite-active {
-  color: rgb(251, 191, 36);
 }
 
 .border-color {
@@ -506,36 +383,6 @@ export default defineComponent({
   background-color: rgba(0, 0, 0, 0.2);
 }
 
-/* Favorite Button */
-.favorite-btn {
-  padding: 8px;
-  border-radius: 8px;
-  transition: all 0.2s;
-  color: rgba(255, 255, 255, 0.4);
-  min-width: 40px;
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.favorite-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.favorite-btn:active {
-  transform: scale(0.95);
-}
-
-.favorite-active {
-  color: #fbbf24;
-}
-
-.favorite-active:hover {
-  color: #f59e0b;
-}
-
 /* Touch-friendly interactions */
 @media (hover: none) and (pointer: coarse) {
   .filter-item:hover {
@@ -545,14 +392,6 @@ export default defineComponent({
   .filter-item:active {
     transform: scale(0.97);
     background-color: rgba(255, 255, 255, 0.12);
-  }
-
-  .favorite-btn:hover {
-    background-color: transparent;
-  }
-
-  .favorite-btn:active {
-    background-color: rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -589,7 +428,6 @@ export default defineComponent({
 /* Prevent text selection on touch devices */
 @media (hover: none) and (pointer: coarse) {
   .filter-item,
-  .favorite-btn,
   .chip-remove {
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;

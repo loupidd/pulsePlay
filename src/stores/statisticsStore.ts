@@ -63,6 +63,10 @@ export const useStatisticsStore = defineStore('statistics', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
+  // Cache tracking
+  const lastFetchedLeague = ref<string>('')
+  const lastFetchedNews = ref<number>(0)
+
   // Available leagues with seasons (using 2023 due to API limitations)
   const availableLeagues = ref<League[]>([
     { id: 39, name: 'Premier League', season: '2023' },
@@ -70,6 +74,7 @@ export const useStatisticsStore = defineStore('statistics', () => {
     { id: 78, name: 'Bundesliga', season: '2023' },
     { id: 135, name: 'Serie A', season: '2023' },
     { id: 61, name: 'Ligue 1', season: '2023' },
+    { id: 88, name: 'Eredivisie', season: '2023' },
   ])
 
   // Helper function to handle errors
@@ -168,12 +173,25 @@ export const useStatisticsStore = defineStore('statistics', () => {
 
   // Fetch all statistics for a league
   const fetchAllStatistics = async (leagueId: number, season: string) => {
-    await Promise.all([
-      fetchTopScorers(leagueId, season),
-      fetchTopAssists(leagueId, season),
-      fetchCleanSheets(leagueId, season),
-      fetchNews(),
-    ])
+    const cacheKey = `${leagueId}_${season}`
+
+    // Check if we already have data for this league
+    if (lastFetchedLeague.value === cacheKey && topScorers.value.length > 0) {
+      console.log('🎯 Using cached data for league:', leagueId)
+      return
+    }
+
+    // Fetch statistics in parallel for better performance
+    await Promise.all([fetchTopScorers(leagueId, season), fetchTopAssists(leagueId, season)])
+
+    // Fetch news only if not fetched recently (within 1 hour)
+    const now = Date.now()
+    if (now - lastFetchedNews.value > 3600000) {
+      await fetchNews()
+      lastFetchedNews.value = now
+    }
+
+    lastFetchedLeague.value = cacheKey
   }
 
   // Toggle bookmark

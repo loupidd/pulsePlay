@@ -27,6 +27,7 @@ watch(
   () => props.items,
   (newItems) => {
     console.log('📋 FilterModal items updated:', newItems?.length || 0, 'total items')
+    console.log('📋 Items:', newItems)
   },
   { immediate: true },
 )
@@ -36,6 +37,7 @@ watch(
   (newValue) => {
     if (newValue) {
       console.log('🔓 Modal opened - Available items:', props.items?.length || 0)
+      console.log('🔓 Items data:', props.items)
     }
   },
 )
@@ -56,14 +58,14 @@ const filteredItems = computed(() => {
 
 const isSelected = (id: number) => props.selectedFilters?.includes(id)
 
-// Group items by type for better display
+// Group items by type for better display - ONLY COMPETITIONS NOW
 const groupedItems = computed(() => {
   const competitions = filteredItems.value.filter((item) => item.type === 'competition')
-  const clubs = filteredItems.value.filter((item) => item.type === 'club')
+
+  console.log('🎯 Grouped competitions:', competitions.length)
 
   return {
     competitions,
-    clubs,
   }
 })
 
@@ -108,7 +110,7 @@ const handleAddItem = (item: FilterItem) => {
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Search competitions and clubs..."
+              placeholder="Search competitions..."
               class="w-full pl-11 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-red-600/50 focus:ring-2 focus:ring-red-600/20 transition-colors"
               autofocus
             />
@@ -129,7 +131,7 @@ const handleAddItem = (item: FilterItem) => {
             <div
               class="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-white/30 mb-4"
             ></div>
-            <p class="text-white/60 text-sm">Loading competitions and clubs...</p>
+            <p class="text-white/60 text-sm">Loading competitions...</p>
           </div>
 
           <template v-else>
@@ -172,70 +174,10 @@ const handleAddItem = (item: FilterItem) => {
 
                   <div
                     v-if="item.image"
-                    class="rounded-full bg-white flex-shrink-0 w-16 h-16"
-                    :style="{
-                      backgroundImage: `url(${item.image})`,
-                      backgroundSize: 'contain',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
-                    }"
-                  />
-                  <span
-                    class="text-xs font-medium text-center text-white leading-tight line-clamp-2"
+                    class="rounded-2xl bg-white flex-shrink-0 w-16 h-16 p-2 flex items-center justify-center"
                   >
-                    {{ item.name }}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Clubs Section -->
-            <div v-if="groupedItems.clubs.length > 0">
-              <h4 class="text-sm font-semibold text-white/60 mb-4 px-2">
-                Clubs ({{ groupedItems.clubs.length }})
-              </h4>
-              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                <div
-                  v-for="item in groupedItems.clubs"
-                  :key="`club-${item.id}`"
-                  @click="handleAddItem(item)"
-                  class="flex flex-col items-center gap-2 p-3 rounded-xl cursor-pointer transition-all border relative group"
-                  :class="
-                    isSelected(item.id)
-                      ? 'bg-red-600 border-red-600 shadow-lg shadow-red-600/20'
-                      : 'border-gray-700/50 hover:bg-white/8 hover:border-gray-600'
-                  "
-                >
-                  <!-- Selected Checkmark -->
-                  <div
-                    v-if="isSelected(item.id)"
-                    class="absolute top-1.5 right-1.5 w-4 h-4 bg-white rounded-full flex items-center justify-center"
-                  >
-                    <svg
-                      class="w-2.5 h-2.5 text-red-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="3"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <img :src="item.image" :alt="item.name" class="w-full h-full object-contain" />
                   </div>
-
-                  <div
-                    v-if="item.image"
-                    class="rounded-full bg-white flex-shrink-0 w-12 h-12"
-                    :style="{
-                      backgroundImage: `url(${item.image})`,
-                      backgroundSize: '70%',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
-                    }"
-                  />
                   <span
                     class="text-xs font-medium text-center text-white leading-tight line-clamp-2"
                   >
