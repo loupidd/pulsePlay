@@ -1,10 +1,4 @@
 <script lang="ts">
-const navigation = [
-  { name: 'Dashboard', href: '#', current: true },
-  { name: 'Leagues', href: '#', current: false },
-  { name: 'Matches', href: '#', current: false },
-  { name: 'Players', href: '#', current: false },
-]
 import {
   Disclosure,
   DisclosureButton,
@@ -14,7 +8,10 @@ import {
   MenuItems,
   MenuItem,
 } from '@headlessui/vue'
-import { Bars3Icon, XMarkIcon, BellIcon } from '@heroicons/vue/24/outline'
+import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, BellIcon } from '@heroicons/vue/24/outline'
+import { useRoute } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useSearchStore } from '@/stores/searchStore'
 
 export default {
   name: 'PulseNavbar',
@@ -28,19 +25,43 @@ export default {
     MenuItem,
     Bars3Icon,
     XMarkIcon,
+    MagnifyingGlassIcon,
     BellIcon,
   },
-  data() {
-    return {
-      navigation: navigation,
+  setup() {
+    const route = useRoute()
+    const searchStore = useSearchStore()
+    const isSearchFocused = ref(false)
+
+    const navigation = computed(() => [
+      { name: 'Dashboard', path: '/', current: route.name === 'dashboard' },
+      { name: 'News', path: '/news', current: route.name === 'news' },
+    ])
+
+    const handleSearch = () => {
+      // Search is handled reactively through the store
+      console.log('Searching for:', searchStore.searchQuery)
     }
-  },
-  methods: {
-    setActive(itemName: string) {
-      this.navigation.forEach((item) => {
-        item.current = item.name === itemName
-      })
-    },
+
+    const handleSearchInput = () => {
+      // Updates happen automatically through v-model binding to store
+    }
+
+    const clearSearch = () => {
+      searchStore.clearSearch()
+    }
+
+    return {
+      navigation,
+      searchQuery: computed({
+        get: () => searchStore.searchQuery,
+        set: (value: string) => searchStore.setSearchQuery(value),
+      }),
+      isSearchFocused,
+      handleSearch,
+      handleSearchInput,
+      clearSearch,
+    }
   },
 }
 </script>
@@ -58,9 +79,9 @@ export default {
           </DisclosureButton>
         </div>
 
-        <!-- Logo and Brand -->
-        <div class="logo-nav-wrapper">
-          <div class="logo-wrapper">
+        <!-- Logo and Navigation Group -->
+        <div class="logo-nav-group">
+          <router-link to="/" class="logo-wrapper">
             <div class="logo-icon">
               <svg class="logo-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -72,22 +93,41 @@ export default {
               </svg>
             </div>
             <span class="logo-text">Pulse</span>
-          </div>
+          </router-link>
 
           <!-- Desktop Navigation -->
           <div class="desktop-nav">
             <div class="nav-links">
-              <a
+              <router-link
                 v-for="item in navigation"
                 :key="item.name"
-                :href="item.href"
-                @click.prevent="setActive(item.name)"
+                :to="item.path"
                 :class="['nav-item', { 'nav-item-active': item.current }]"
                 :aria-current="item.current ? 'page' : undefined"
               >
                 {{ item.name }}
-              </a>
+              </router-link>
             </div>
+          </div>
+        </div>
+
+        <!-- Search Bar (Centered) -->
+        <div class="search-container">
+          <div class="search-wrapper" :class="{ 'search-focused': isSearchFocused }">
+            <MagnifyingGlassIcon class="search-icon" />
+            <input
+              v-model="searchQuery"
+              @input="handleSearchInput"
+              @keyup.enter="handleSearch"
+              @focus="isSearchFocused = true"
+              @blur="isSearchFocused = false"
+              type="text"
+              placeholder="Search by club name..."
+              class="search-input"
+            />
+            <button v-if="searchQuery" @click="clearSearch" class="search-clear">
+              <XMarkIcon class="clear-icon" />
+            </button>
           </div>
         </div>
 
@@ -194,17 +234,33 @@ export default {
     >
       <DisclosurePanel class="mobile-panel">
         <div class="mobile-nav-links">
-          <DisclosureButton
-            v-for="item in navigation"
-            :key="item.name"
-            as="a"
-            :href="item.href"
-            @click.prevent="setActive(item.name)"
-            :class="['nav-item mobile-nav-item', { 'nav-item-active': item.current }]"
-            :aria-current="item.current ? 'page' : undefined"
-          >
-            {{ item.name }}
+          <DisclosureButton v-for="item in navigation" :key="item.name" as="div">
+            <router-link
+              :to="item.path"
+              :class="['nav-item mobile-nav-item', { 'nav-item-active': item.current }]"
+              :aria-current="item.current ? 'page' : undefined"
+            >
+              {{ item.name }}
+            </router-link>
           </DisclosureButton>
+        </div>
+
+        <!-- Mobile Search -->
+        <div class="mobile-search">
+          <div class="search-wrapper">
+            <MagnifyingGlassIcon class="search-icon" />
+            <input
+              v-model="searchQuery"
+              @input="handleSearchInput"
+              @keyup.enter="handleSearch"
+              type="text"
+              placeholder="Search by club name..."
+              class="search-input"
+            />
+            <button v-if="searchQuery" @click="clearSearch" class="search-clear">
+              <XMarkIcon class="clear-icon" />
+            </button>
+          </div>
         </div>
       </DisclosurePanel>
     </transition>
@@ -224,8 +280,8 @@ export default {
 }
 
 .navbar-inner {
-  max-width: 100%;
-  margin: 0;
+  max-width: 1600px;
+  margin: 0 auto;
   padding: 0 24px;
 }
 
@@ -234,6 +290,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   height: 64px;
+  gap: 16px;
 }
 
 /* Mobile Menu Button */
@@ -250,21 +307,15 @@ export default {
   color: rgba(156, 163, 175, 1);
 }
 
-/* Logo and Navigation Wrapper */
-.logo-nav-wrapper {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  justify-content: flex-start;
-  gap: 0;
-}
-
+/* Logo */
 .logo-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-shrink: 0;
-  margin-right: 24px;
+  text-decoration: none;
+  color: inherit;
+  margin-right: 16px;
 }
 
 .logo-icon {
@@ -303,11 +354,17 @@ export default {
 /* Desktop Navigation */
 .desktop-nav {
   display: block;
+  margin-right: 16px;
 }
 
 .nav-links {
   display: flex;
-  gap: 8px;
+  gap: 4px;
+}
+
+.logo-nav-group {
+  display: flex;
+  align-items: center;
 }
 
 .nav-item {
@@ -332,14 +389,90 @@ export default {
 }
 
 .nav-item-active {
-  background: linear-gradient(135deg, var(--c-crimson-500) 0%, var(--c-crimson-600) 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white !important;
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 .nav-item-active:hover {
-  background: linear-gradient(135deg, var(--c-crimson-600) 0%, var(--c-crimson-700) 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+}
+
+/* Search Container */
+.search-container {
+  flex: 1;
+  max-width: 500px;
+  display: flex;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.search-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.search-wrapper:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.search-focused {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  width: 20px;
+  height: 20px;
+  color: rgba(156, 163, 175, 1);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 40px 10px 40px;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: rgba(156, 163, 175, 1);
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: rgba(156, 163, 175, 1);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-clear:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.clear-icon {
+  width: 16px;
+  height: 16px;
 }
 
 /* Actions Wrapper */
@@ -347,6 +480,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* Navigation Buttons */
@@ -541,10 +676,19 @@ export default {
   font-size: 16px;
 }
 
+.mobile-search {
+  padding: 0 16px 16px 16px;
+}
+
+.mobile-search .search-wrapper {
+  width: 100%;
+}
+
 /* Responsive Breakpoints */
-@media (min-width: 640px) {
+@media (min-width: 1024px) {
   .navbar-content {
     height: 80px;
+    gap: 32px;
   }
 
   .logo-icon {
@@ -561,32 +705,357 @@ export default {
     width: 44px;
     height: 44px;
   }
+
+  .search-container {
+    max-width: 600px;
+  }
 }
 
-@media (max-width: 639px) {
+@media (min-width: 640px) and (max-width: 1023px) {
+  .navbar-content {
+    height: 72px;
+    gap: 20px;
+  }
+
+  .logo-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .logo-text {
+    font-size: 22px;
+  }
+
+  .search-container {
+    max-width: 400px;
+  }
+
+  .nav-item {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .profile-image {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .navbar-inner {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 768px) {
   .navbar-inner {
     padding: 0 16px;
   }
 
-  .mobile-menu-wrapper {
-    display: flex;
-    align-items: center;
+  .navbar-content {
+    height: 64px;
+    gap: 12px;
   }
 
-  .logo-nav-wrapper {
-    justify-content: center;
+  .logo-text {
+    font-size: 20px;
   }
 
-  .desktop-nav {
-    display: none;
+  .logo-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .logo-svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .search-container {
+    max-width: 300px;
+  }
+
+  .search-input {
+    font-size: 13px;
+    padding: 8px 36px 8px 36px;
+  }
+
+  .search-icon {
+    width: 18px;
+    height: 18px;
+    left: 10px;
+  }
+
+  .nav-item {
+    padding: 8px 12px;
+    font-size: 13px;
   }
 
   .actions-wrapper {
     gap: 8px;
   }
 
+  .nav-button {
+    padding: 8px;
+  }
+
+  .icon-size {
+    width: 22px;
+    height: 22px;
+  }
+
+  .profile-image {
+    width: 38px;
+    height: 38px;
+  }
+
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@media (max-width: 639px) {
+  .mobile-menu-wrapper {
+    display: flex;
+    align-items: center;
+  }
+
+  .desktop-nav {
+    display: none;
+  }
+
+  .search-container {
+    display: none;
+  }
+
+  .navbar-content {
+    gap: 8px;
+  }
+
+  .logo-wrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .actions-wrapper {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-inner {
+    padding: 0 12px;
+  }
+
+  .navbar-content {
+    height: 60px;
+  }
+
   .logo-text {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .logo-svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .mobile-menu-btn {
+    padding: 8px;
+  }
+
+  .nav-button {
+    padding: 7px;
+  }
+
+  .icon-size {
+    width: 20px;
+    height: 20px;
+  }
+
+  .profile-image {
+    width: 36px;
+    height: 36px;
+  }
+
+  .notification-badge {
+    width: 7px;
+    height: 7px;
+    top: 6px;
+    right: 6px;
+  }
+
+  .mobile-nav-links {
+    padding: 12px;
+  }
+
+  .mobile-nav-item {
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+
+  .mobile-search {
+    padding: 0 12px 12px 12px;
+  }
+
+  .mobile-search .search-input {
+    padding: 10px 36px 10px 36px;
+    font-size: 14px;
+  }
+
+  .profile-dropdown {
+    width: 200px;
+    margin-top: 8px;
+  }
+
+  .dropdown-header {
+    padding: 10px 14px;
+  }
+
+  .user-name {
+    font-size: 13px;
+  }
+
+  .user-email {
+    font-size: 11px;
+  }
+
+  .menu-item {
+    padding: 8px 14px;
+    margin: 3px 6px;
+    font-size: 13px;
+  }
+
+  .menu-icon {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+@media (max-width: 360px) {
+  .navbar-inner {
+    padding: 0 10px;
+  }
+
+  .logo-text {
+    font-size: 16px;
+  }
+
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .logo-svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .profile-image {
+    width: 34px;
+    height: 34px;
+  }
+
+  .actions-wrapper {
+    gap: 6px;
+  }
+
+  .profile-dropdown {
+    width: 180px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .nav-item:active {
+    transform: scale(0.96);
+  }
+
+  .nav-button:active {
+    transform: scale(0.92);
+  }
+
+  .profile-button:active {
+    transform: scale(0.92);
+  }
+
+  .menu-item:active {
+    transform: scale(0.96);
+  }
+
+  .search-clear:active {
+    transform: scale(0.9);
+  }
+
+  /* Larger touch targets for mobile */
+  .nav-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .profile-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .search-clear {
+    min-width: 36px;
+    min-height: 36px;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 896px) and (orientation: landscape) {
+  .navbar-content {
+    height: 56px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .profile-image {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mobile-panel {
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  .navbar-inner {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+
+  @media (max-width: 768px) {
+    .navbar-inner {
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+  }
+
+  @media (max-width: 480px) {
+    .navbar-inner {
+      padding-left: max(12px, env(safe-area-inset-left));
+      padding-right: max(12px, env(safe-area-inset-right));
+    }
   }
 }
 

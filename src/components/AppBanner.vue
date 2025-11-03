@@ -1,141 +1,155 @@
 <template>
   <div class="relative overflow-hidden rounded-2xl shadow-lg h-full">
-    <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <!-- Background with gradient -->
+    <div class="absolute inset-0 bg-gradient-to-br from-red-600 via-red-700 to-gray-900">
       <div
-        class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_50%_120%,rgba(220,38,38,0.3),transparent)]"
+        class="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]"
       ></div>
     </div>
 
     <!-- Content -->
-    <div class="relative h-full flex flex-col justify-between p-8">
-      <!-- Header -->
-      <div class="flex items-start justify-between">
-        <div>
-          <div class="text-red-500 text-sm font-semibold mb-1 uppercase tracking-wide">
-            {{ matchData.competition }}
-          </div>
-          <h2 class="text-white text-2xl font-bold">
-            {{ matchData.matchWeek }}
-          </h2>
-          <p class="text-gray-400 text-sm mt-1">{{ matchData.date }}</p>
+    <div class="banner-content">
+      <!-- Left Content -->
+      <div class="flex-1 max-w-2xl">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
+            />
+          </svg>
+          <span class="text-white/90 text-sm font-semibold uppercase tracking-wide">
+            {{ greeting }}
+          </span>
         </div>
-        <button @click="handleMenuClick" class="text-white hover:text-gray-300 transition-colors">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+        <h1 class="text-white text-4xl md:text-5xl font-bold mb-3">
+          {{ title }}
+        </h1>
+
+        <p class="text-white/80 text-lg md:text-xl max-w-xl">
+          {{ subtitle }}
+        </p>
+      </div>
+
+      <!-- Right Content - Floating Pulse Logo -->
+      <div class="logo-container">
+        <div class="logo-wrapper">
+          <svg class="logo-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+              stroke-width="2.5"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
             />
           </svg>
-        </button>
-      </div>
-
-      <!-- Score Section -->
-      <div class="flex items-center justify-center gap-8 my-auto">
-        <!-- Home Team -->
-        <div class="flex flex-col items-center gap-3">
-          <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
-            <img
-              :src="matchData.homeTeam.logo"
-              :alt="matchData.homeTeam.name"
-              class="w-16 h-16 object-contain"
-            />
-          </div>
-          <span class="text-white font-semibold text-lg">{{ matchData.homeTeam.name }}</span>
         </div>
-
-        <!-- Score -->
-        <div class="flex items-center gap-4">
-          <div class="text-6xl font-bold text-white">{{ matchData.homeTeam.score }}</div>
-          <div class="text-4xl font-bold text-gray-500">:</div>
-          <div class="text-6xl font-bold text-white">{{ matchData.awayTeam.score }}</div>
-        </div>
-
-        <!-- Away Team -->
-        <div class="flex flex-col items-center gap-3">
-          <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
-            <img
-              :src="matchData.awayTeam.logo"
-              :alt="matchData.awayTeam.name"
-              class="w-16 h-16 object-contain"
-            />
-          </div>
-          <span class="text-white font-semibold text-lg">{{ matchData.awayTeam.name }}</span>
-        </div>
-      </div>
-
-      <!-- Watch Now Button -->
-      <div class="flex justify-center">
-        <button
-          @click="handleWatchNow"
-          class="cursor-pointer bg-accent hover:bg-accent-hover px-16 py-3 rounded-lg font-semibold text-white transition-all duration-300 transform hover:scale-105 shadow-lg"
-        >
-          Watch Now
-        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-interface Team {
-  name: string
-  logo: string
-  score: number
+import { computed } from 'vue'
+
+interface WelcomeBanner {
+  greeting?: string
+  title?: string
+  subtitle?: string
 }
 
-interface MatchBanner {
-  competition: string
-  matchWeek: string
-  date: string
-  homeTeam: Team
-  awayTeam: Team
-}
-
-withDefaults(
+const props = withDefaults(
   defineProps<{
-    matchData?: MatchBanner
+    bannerData?: WelcomeBanner
+    userName?: string
   }>(),
   {
-    matchData: () => ({
-      competition: 'LA LIGA EA SPORTS',
-      matchWeek: 'La Liga Week 22',
-      date: 'Tue, 07 Feb 2025',
-      homeTeam: {
-        name: 'Real Sociedad',
-        logo: 'https://tmssl.akamaized.net//images/wappen/head/681.png?lm=1614795530',
-        score: 5,
-      },
-      awayTeam: {
-        name: 'Real Madrid',
-        logo: 'https://tmssl.akamaized.net//images/wappen/head/418.png?lm=1729684474',
-        score: 1,
-      },
+    bannerData: () => ({
+      greeting: 'Welcome Back',
+      title: 'Your Football Hub',
+      subtitle: 'Stay updated with live scores, match schedules, and league standings',
     }),
   },
 )
 
-const emit = defineEmits<{
-  watchNow: []
-  menuClick: []
-}>()
+const greeting = computed(() => {
+  if (props.userName) {
+    return `Welcome Back, ${props.userName}`
+  }
+  return props.bannerData?.greeting || 'Welcome Back'
+})
 
-const handleWatchNow = () => {
-  emit('watchNow')
-}
+const title = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good Morning, Football Fan!'
+  if (hour < 18) return 'Good Afternoon, Football Fan!'
+  return 'Good Evening, Football Fan!'
+})
 
-const handleMenuClick = () => {
-  emit('menuClick')
-}
+const subtitle = computed(() => {
+  return (
+    props.bannerData?.subtitle ||
+    'Stay updated with live scores, match schedules, and league standings'
+  )
+})
 </script>
 
 <style scoped>
-.bg-accent {
-  background-color: var(--color-accent);
+.banner-content {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3rem;
 }
 
-.bg-accent:hover {
-  background-color: var(--color-accent-hover);
+@media (max-width: 768px) {
+  .banner-content {
+    padding: 2rem;
+  }
+}
+
+.logo-container {
+  position: relative;
+  width: 12rem;
+  height: 12rem;
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.logo-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  backdrop-filter: blur(10px);
+  animation: float 6s ease-in-out infinite;
+}
+
+.logo-svg {
+  width: 5rem;
+  height: 5rem;
+  color: white;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
 }
 </style>
