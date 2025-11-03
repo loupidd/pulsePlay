@@ -11,6 +11,7 @@ import {
 import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, BellIcon } from '@heroicons/vue/24/outline'
 import { useRoute } from 'vue-router'
 import { computed, ref } from 'vue'
+import { useSearchStore } from '@/stores/searchStore'
 
 export default {
   name: 'PulseNavbar',
@@ -27,9 +28,9 @@ export default {
     MagnifyingGlassIcon,
     BellIcon,
   },
-  setup(props, { emit }) {
+  setup() {
     const route = useRoute()
-    const searchQuery = ref('')
+    const searchStore = useSearchStore()
     const isSearchFocused = ref(false)
 
     const navigation = computed(() => [
@@ -38,23 +39,24 @@ export default {
     ])
 
     const handleSearch = () => {
-      if (searchQuery.value.trim()) {
-        emit('search', searchQuery.value.trim())
-      }
+      // Search is handled reactively through the store
+      console.log('Searching for:', searchStore.searchQuery)
     }
 
     const handleSearchInput = () => {
-      emit('search', searchQuery.value.trim())
+      // Updates happen automatically through v-model binding to store
     }
 
     const clearSearch = () => {
-      searchQuery.value = ''
-      handleSearchInput()
+      searchStore.clearSearch()
     }
 
     return {
       navigation,
-      searchQuery,
+      searchQuery: computed({
+        get: () => searchStore.searchQuery,
+        set: (value: string) => searchStore.setSearchQuery(value),
+      }),
       isSearchFocused,
       handleSearch,
       handleSearchInput,
@@ -77,33 +79,35 @@ export default {
           </DisclosureButton>
         </div>
 
-        <!-- Logo -->
-        <router-link to="/" class="logo-wrapper">
-          <div class="logo-icon">
-            <svg class="logo-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2.5"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              />
-            </svg>
-          </div>
-          <span class="logo-text">Pulse</span>
-        </router-link>
+        <!-- Logo and Navigation Group -->
+        <div class="logo-nav-group">
+          <router-link to="/" class="logo-wrapper">
+            <div class="logo-icon">
+              <svg class="logo-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </div>
+            <span class="logo-text">Pulse</span>
+          </router-link>
 
-        <!-- Desktop Navigation -->
-        <div class="desktop-nav">
-          <div class="nav-links">
-            <router-link
-              v-for="item in navigation"
-              :key="item.name"
-              :to="item.path"
-              :class="['nav-item', { 'nav-item-active': item.current }]"
-              :aria-current="item.current ? 'page' : undefined"
-            >
-              {{ item.name }}
-            </router-link>
+          <!-- Desktop Navigation -->
+          <div class="desktop-nav">
+            <div class="nav-links">
+              <router-link
+                v-for="item in navigation"
+                :key="item.name"
+                :to="item.path"
+                :class="['nav-item', { 'nav-item-active': item.current }]"
+                :aria-current="item.current ? 'page' : undefined"
+              >
+                {{ item.name }}
+              </router-link>
+            </div>
           </div>
         </div>
 
@@ -276,8 +280,8 @@ export default {
 }
 
 .navbar-inner {
-  max-width: 100%;
-  margin: 0;
+  max-width: 1600px;
+  margin: 0 auto;
   padding: 0 24px;
 }
 
@@ -286,7 +290,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   height: 64px;
-  gap: 24px;
+  gap: 16px;
 }
 
 /* Mobile Menu Button */
@@ -307,10 +311,11 @@ export default {
 .logo-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-shrink: 0;
   text-decoration: none;
   color: inherit;
+  margin-right: 16px;
 }
 
 .logo-icon {
@@ -349,11 +354,17 @@ export default {
 /* Desktop Navigation */
 .desktop-nav {
   display: block;
+  margin-right: 16px;
 }
 
 .nav-links {
   display: flex;
-  gap: 8px;
+  gap: 4px;
+}
+
+.logo-nav-group {
+  display: flex;
+  align-items: center;
 }
 
 .nav-item {
@@ -394,6 +405,7 @@ export default {
   max-width: 500px;
   display: flex;
   justify-content: center;
+  margin: 0 auto;
 }
 
 .search-wrapper {
@@ -469,6 +481,7 @@ export default {
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* Navigation Buttons */
@@ -672,9 +685,10 @@ export default {
 }
 
 /* Responsive Breakpoints */
-@media (min-width: 640px) {
+@media (min-width: 1024px) {
   .navbar-content {
     height: 80px;
+    gap: 32px;
   }
 
   .logo-icon {
@@ -691,13 +705,117 @@ export default {
     width: 44px;
     height: 44px;
   }
+
+  .search-container {
+    max-width: 600px;
+  }
 }
 
-@media (max-width: 639px) {
+@media (min-width: 640px) and (max-width: 1023px) {
+  .navbar-content {
+    height: 72px;
+    gap: 20px;
+  }
+
+  .logo-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .logo-text {
+    font-size: 22px;
+  }
+
+  .search-container {
+    max-width: 400px;
+  }
+
+  .nav-item {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .profile-image {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .navbar-inner {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 768px) {
   .navbar-inner {
     padding: 0 16px;
   }
 
+  .navbar-content {
+    height: 64px;
+    gap: 12px;
+  }
+
+  .logo-text {
+    font-size: 20px;
+  }
+
+  .logo-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .logo-svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .search-container {
+    max-width: 300px;
+  }
+
+  .search-input {
+    font-size: 13px;
+    padding: 8px 36px 8px 36px;
+  }
+
+  .search-icon {
+    width: 18px;
+    height: 18px;
+    left: 10px;
+  }
+
+  .nav-item {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .actions-wrapper {
+    gap: 8px;
+  }
+
+  .nav-button {
+    padding: 8px;
+  }
+
+  .icon-size {
+    width: 22px;
+    height: 22px;
+  }
+
+  .profile-image {
+    width: 38px;
+    height: 38px;
+  }
+
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@media (max-width: 639px) {
   .mobile-menu-wrapper {
     display: flex;
     align-items: center;
@@ -711,12 +829,233 @@ export default {
     display: none;
   }
 
-  .actions-wrapper {
+  .navbar-content {
     gap: 8px;
   }
 
+  .logo-wrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .actions-wrapper {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-inner {
+    padding: 0 12px;
+  }
+
+  .navbar-content {
+    height: 60px;
+  }
+
   .logo-text {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .logo-svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .mobile-menu-btn {
+    padding: 8px;
+  }
+
+  .nav-button {
+    padding: 7px;
+  }
+
+  .icon-size {
+    width: 20px;
+    height: 20px;
+  }
+
+  .profile-image {
+    width: 36px;
+    height: 36px;
+  }
+
+  .notification-badge {
+    width: 7px;
+    height: 7px;
+    top: 6px;
+    right: 6px;
+  }
+
+  .mobile-nav-links {
+    padding: 12px;
+  }
+
+  .mobile-nav-item {
+    padding: 10px 14px;
+    font-size: 15px;
+  }
+
+  .mobile-search {
+    padding: 0 12px 12px 12px;
+  }
+
+  .mobile-search .search-input {
+    padding: 10px 36px 10px 36px;
+    font-size: 14px;
+  }
+
+  .profile-dropdown {
+    width: 200px;
+    margin-top: 8px;
+  }
+
+  .dropdown-header {
+    padding: 10px 14px;
+  }
+
+  .user-name {
+    font-size: 13px;
+  }
+
+  .user-email {
+    font-size: 11px;
+  }
+
+  .menu-item {
+    padding: 8px 14px;
+    margin: 3px 6px;
+    font-size: 13px;
+  }
+
+  .menu-icon {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+@media (max-width: 360px) {
+  .navbar-inner {
+    padding: 0 10px;
+  }
+
+  .logo-text {
+    font-size: 16px;
+  }
+
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .logo-svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .profile-image {
+    width: 34px;
+    height: 34px;
+  }
+
+  .actions-wrapper {
+    gap: 6px;
+  }
+
+  .profile-dropdown {
+    width: 180px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .nav-item:active {
+    transform: scale(0.96);
+  }
+
+  .nav-button:active {
+    transform: scale(0.92);
+  }
+
+  .profile-button:active {
+    transform: scale(0.92);
+  }
+
+  .menu-item:active {
+    transform: scale(0.96);
+  }
+
+  .search-clear:active {
+    transform: scale(0.9);
+  }
+
+  /* Larger touch targets for mobile */
+  .nav-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .profile-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .search-clear {
+    min-width: 36px;
+    min-height: 36px;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 896px) and (orientation: landscape) {
+  .navbar-content {
+    height: 56px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .profile-image {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mobile-panel {
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  .navbar-inner {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
+
+  @media (max-width: 768px) {
+    .navbar-inner {
+      padding-left: max(16px, env(safe-area-inset-left));
+      padding-right: max(16px, env(safe-area-inset-right));
+    }
+  }
+
+  @media (max-width: 480px) {
+    .navbar-inner {
+      padding-left: max(12px, env(safe-area-inset-left));
+      padding-right: max(12px, env(safe-area-inset-right));
+    }
   }
 }
 
