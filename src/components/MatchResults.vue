@@ -259,6 +259,7 @@ const currentSearchQuery = ref('')
 const filterStore = useFilterStore()
 const searchStore = useSearchStore()
 
+const store = useFilterStore()
 const emit = defineEmits<{
   matchClick: [matchId: string]
   favoriteToggle: [dateId: string]
