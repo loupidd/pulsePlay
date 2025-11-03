@@ -577,6 +577,7 @@ onMounted(() => {
   line-height: 1.5;
   margin: 0;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -584,6 +585,7 @@ onMounted(() => {
 
 .featured-title {
   font-size: 1.75rem;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
   font-weight: 700;
   line-height: 1.3;
@@ -595,6 +597,7 @@ onMounted(() => {
   line-height: 1.6;
   margin: 0;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -602,6 +605,7 @@ onMounted(() => {
 
 .featured .card-description {
   font-size: 1rem;
+  line-clamp: 3;
   -webkit-line-clamp: 3;
 }
 
@@ -836,11 +840,13 @@ onMounted(() => {
 
   .card-description {
     font-size: 0.8125rem;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
   }
 
   .featured .card-description {
     font-size: 0.9375rem;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
   }
 
@@ -894,6 +900,7 @@ onMounted(() => {
 
   .featured-title {
     font-size: 1.375rem;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
   }
 

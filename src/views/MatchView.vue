@@ -1,5 +1,5 @@
 <template>
-  <div class="relative">
+  <div class="match-view-container">
     <transition name="slide-fade" mode="out-in">
       <!-- Match List -->
       <MatchResults v-if="!selectedMatch" @match-click="handleMatchClick" key="list" />
@@ -211,6 +211,13 @@ function extractTeamIdFromLogo(logoUrl: string): string | null {
 </script>
 
 <style scoped>
+.match-view-container {
+  position: relative;
+  width: 100%;
+  min-height: 400px;
+}
+
+/* Transition Animations */
 .slide-fade-enter-active {
   transition: all 0.3s ease-out;
 }
@@ -237,5 +244,103 @@ function extractTeamIdFromLogo(logoUrl: string): string | null {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Responsive Breakpoints */
+
+/* Large Desktop (1440px+) */
+@media (min-width: 1440px) {
+  .match-view-container {
+    max-width: 100%;
+  }
+}
+
+/* Desktop (1024px - 1439px) */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .match-view-container {
+    width: 100%;
+  }
+}
+
+/* Tablet (768px - 1023px) */
+@media (max-width: 1023px) {
+  .match-view-container {
+    width: 100%;
+    min-height: 350px;
+  }
+
+  .slide-fade-enter-from {
+    transform: translateX(15px);
+  }
+
+  .slide-fade-leave-to {
+    transform: translateX(-15px);
+  }
+}
+
+/* Mobile (480px - 767px) */
+@media (max-width: 767px) {
+  .match-view-container {
+    min-height: 300px;
+  }
+
+  .slide-fade-enter-active,
+  .slide-fade-leave-active {
+    transition: all 0.25s ease-out;
+  }
+
+  .slide-fade-enter-from {
+    transform: translateX(10px);
+  }
+
+  .slide-fade-leave-to {
+    transform: translateX(-10px);
+  }
+}
+
+/* Small Mobile (< 480px) */
+@media (max-width: 479px) {
+  .match-view-container {
+    min-height: 250px;
+  }
+
+  .slide-fade-enter-active,
+  .slide-fade-leave-active {
+    transition: all 0.2s ease-out;
+  }
+}
+
+/* Landscape Mobile */
+@media (max-width: 896px) and (orientation: landscape) {
+  .match-view-container {
+    min-height: 200px;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .match-view-container {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Ensure smooth scrolling */
+  .match-view-container * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Performance optimizations for animations */
+@media (prefers-reduced-motion: reduce) {
+  .slide-fade-enter-active,
+  .slide-fade-leave-active,
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: none;
+  }
+
+  .slide-fade-enter-from,
+  .slide-fade-leave-to {
+    transform: none;
+  }
 }
 </style>

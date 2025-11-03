@@ -52,7 +52,7 @@
         }}
       </p>
       <button
-        @click="isSearching ? clearSearch() : fetchRecentMatches(1)"
+        @click="isSearching ? handleClearSearch() : fetchRecentMatches(1)"
         class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all duration-300 font-medium"
       >
         {{ isSearching ? 'Clear Search' : 'Refresh' }}
@@ -213,6 +213,7 @@
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useFilterStore } from '@/stores/useFilterStore'
+import { useSearchStore } from '@/stores/searchStore'
 
 interface Team {
   id?: number
@@ -254,6 +255,9 @@ const error = ref<string | null>(null)
 const currentPage = ref(1)
 const isSearching = ref(false)
 const currentSearchQuery = ref('')
+
+const filterStore = useFilterStore()
+const searchStore = useSearchStore()
 
 const store = useFilterStore()
 const emit = defineEmits<{
@@ -297,8 +301,8 @@ const fetchRecentMatches = async (page: number = 1) => {
       page,
     }
 
-    if (store.activeCompetitionIds?.length > 0) {
-      params.leagues = store.activeCompetitionIds.join(',')
+    if (filterStore.activeCompetitionIds?.length > 0) {
+      params.leagues = filterStore.activeCompetitionIds.join(',')
     }
 
     const response = await axios.get('http://localhost:8080/api/matches/recent', { params })
@@ -341,8 +345,8 @@ const searchMatches = async (query: string, page: number = 1) => {
       page,
     }
 
-    if (store.activeCompetitionIds?.length > 0) {
-      params.leagues = store.activeCompetitionIds.join(',')
+    if (filterStore.activeCompetitionIds?.length > 0) {
+      params.leagues = filterStore.activeCompetitionIds.join(',')
     }
 
     const response = await axios.get('http://localhost:8080/api/matches/search', { params })
@@ -359,7 +363,8 @@ const searchMatches = async (query: string, page: number = 1) => {
   }
 }
 
-const clearSearch = () => {
+const handleClearSearch = () => {
+  searchStore.clearSearch()
   isSearching.value = false
   currentSearchQuery.value = ''
   fetchRecentMatches(1)
@@ -372,7 +377,7 @@ const loadMore = (): void => {
 defineExpose({
   fetchRecentMatches,
   searchMatches,
-  clearSearch,
+  clearSearch: handleClearSearch,
 })
 
 onMounted(() => {
@@ -380,8 +385,9 @@ onMounted(() => {
   fetchRecentMatches(1)
 })
 
+// Watch for filter changes
 watch(
-  () => store.activeCompetitionIds,
+  () => filterStore.activeCompetitionIds,
   () => {
     console.log('Filters changed')
     if (isSearching.value && currentSearchQuery.value) {
@@ -392,11 +398,22 @@ watch(
   },
   { deep: true },
 )
-</script>
 
-<style scoped>
-/* Keep all your existing styles from the original component */
-</style>
+// Watch for search query changes from the navbar
+watch(
+  () => searchStore.searchQuery,
+  (newQuery, oldQuery) => {
+    console.log('Search query changed from:', oldQuery, 'to:', newQuery)
+    if (newQuery && newQuery.trim()) {
+      console.log('Triggering search for:', newQuery)
+      searchMatches(newQuery, 1)
+    } else if (oldQuery && !newQuery) {
+      console.log('Search cleared, fetching recent matches')
+      fetchRecentMatches(1)
+    }
+  },
+)
+</script>
 
 <style scoped>
 /* Container */
@@ -998,5 +1015,10 @@ watch(
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.match-results-container {
+  width: 100%;
+  max-width: 100%;
 }
 </style>
